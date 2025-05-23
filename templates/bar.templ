@@ -1,0 +1,10 @@
+package templates
+
+import "go-router/models"
+
+templ BarPage(bar models.Bar) {
+    <section>
+        <h1>{bar.Name}</h1>
+        <p>Adresse: {bar.Address}</p>
+    </section>
+}

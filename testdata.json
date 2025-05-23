@@ -1,0 +1,113 @@
+[
+    {
+      "orgnummer": "900100100",
+      "name": "The Tipsy Viking",
+      "city": "Oslo",
+      "address": "Valkyriegata 10",
+      "postnummer": "0366",
+      "price": 84,
+      "size": 0.4,
+      "pint": 105,
+      "slug": "the-tipsy-viking"
+    },
+    {
+      "orgnummer": "900100101",
+      "name": "Barrel & Bean",
+      "city": "Bergen",
+      "address": "Bryggen 12",
+      "postnummer": "5003",
+      "price": 90,
+      "size": 0.5,
+      "pint": 90,
+      "slug": "barrel-and-bean"
+    },
+    {
+      "orgnummer": "900100102",
+      "name": "Midnight Moose",
+      "city": "Trondheim",
+      "address": "Olav Tryggvasons gate 28",
+      "postnummer": "7011",
+      "price": 66,
+      "size": 0.4,
+      "pint": 83,
+      "slug": "midnight-moose"
+    },
+    {
+      "orgnummer": "900100103",
+      "name": "The Drunken Cod",
+      "city": "Stavanger",
+      "address": "Havnegata 5",
+      "postnummer": "4006",
+      "price": 75,
+      "size": 0.5,
+      "pint": 75,
+      "slug": "the-drunken-cod"
+    },
+    {
+      "orgnummer": "900100104",
+      "name": "Norse Nectar",
+      "city": "Tromsø",
+      "address": "Storgata 50",
+      "postnummer": "9008",
+      "price": 62,
+      "size": 0.4,
+      "pint": 78,
+      "slug": "norse-nectar"
+    },
+    {
+      "orgnummer": "900100105",
+      "name": "Barkoden",
+      "city": "Oslo",
+      "address": "Barcode Street 7",
+      "postnummer": "0191",
+      "price": 120,
+      "size": 0.5,
+      "pint": 120,
+      "slug": "barkoden"
+    },
+    {
+      "orgnummer": "900100106",
+      "name": "The Fjord Flask",
+      "city": "Ålesund",
+      "address": "Molovegen 3",
+      "postnummer": "6004",
+      "price": 78,
+      "size": 0.4,
+      "pint": 98,
+      "slug": "the-fjord-flask"
+    },
+    {
+      "orgnummer": "900100107",
+      "name": "Reinbeer Pub",
+      "city": "Lillehammer",
+      "address": "Storgata 22",
+      "postnummer": "2609",
+      "price": 69,
+      "size": 0.4,
+      "pint": 86,
+      "slug": "reinbeer-pub"
+    },
+    {
+      "orgnummer": "900100108",
+      "name": "Aurora Taproom",
+      "city": "Bodø",
+      "address": "Bankgata 11",
+      "postnummer": "8005",
+      "price": 55,
+      "size": 0.4,
+      "pint": 69,
+      "slug": "aurora-taproom"
+    },
+    {
+      "orgnummer": "900100109",
+      "name": "The Arctic Pour",
+      "city": "Kirkenes",
+      "address": "Dr. Wessels gate 1",
+      "postnummer": "9900",
+      "price": 72,
+      "size": 0.5,
+      "pint": 72,
+      "slug": "the-arctic-pour"
+    }
+  ]
+  

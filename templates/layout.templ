@@ -1,0 +1,25 @@
+package templates
+
+templ Layout(title string, content templ.Component) {
+    <html>
+        <head>
+            <title>{title}</title>
+            <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+        </head>
+        <body>
+            <header>
+                <nav>
+                    <a href="/">Home</a> |
+                    <a href="/about">About</a>
+                </nav>
+            </header>
+            <main>
+                @content
+            </main>
+            <footer>
+                <hr />
+                <p>&copy; 2025 Gloriohm Inc.</p>
+            </footer>
+        </body>
+    </html>
+}
