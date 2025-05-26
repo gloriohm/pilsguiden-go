@@ -8,4 +8,7 @@ require github.com/a-h/templ v0.3.857
 
 require golang.org/x/text v0.24.0
 
-require github.com/go-playground/form v3.1.4+incompatible // indirect
+require (
+	github.com/go-playground/form v3.1.4+incompatible
+	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
+)

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"go-router/database"
+	"go-router/internal/handlers"
 	"go-router/models"
 	"go-router/templates"
 
@@ -33,6 +34,20 @@ func main() {
 			templates.Layout("Create Bar", templates.BarManualForm()).Render(r.Context(), w)
 		})
 		r.Post("/fetch-osm", handleCreateBar)
+	})
+
+	r.Route("/liste", func(r chi.Router) {
+		r.Route("/{fylke}", func(r chi.Router) {
+			r.Get("/", handlers.HandleListe)
+
+			r.Route("/{kommune}", func(r chi.Router) {
+				r.Get("/", handlers.HandleListe)
+
+				r.Route("/{sted}", func(r chi.Router) {
+					r.Get("/", handlers.HandleListe)
+				})
+			})
+		})
 	})
 
 	http.ListenAndServe(":3000", r)
