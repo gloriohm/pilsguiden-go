@@ -1,0 +1,39 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build cache
+/pkg/
+/bin/
+
+# Secrets and config
+.env
+.env.*
+*.key
+*.crt
+*.pem
+*.enc
+
+# Generated code
+*_templ.go
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editors
+.vscode/
+*.swp
+*.swo
