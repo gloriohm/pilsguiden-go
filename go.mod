@@ -4,7 +4,7 @@ go 1.23.4
 
 require github.com/go-chi/chi v1.5.5
 
-require github.com/a-h/templ v0.3.857
+require github.com/a-h/templ v0.3.898
 
 require (
 	github.com/jackc/pgx/v5 v5.7.5

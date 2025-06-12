@@ -1,0 +1,17 @@
+package templates
+
+import (
+    "strconv"
+
+    "go-router/models"
+)    
+
+templ List(bars []models.Bar) {
+    <section>
+        <ul>
+        for _, bar := range bars {
+            <li>{bar.Name}: {strconv.Itoa(int(bar.Pint))},-</li>
+        }
+        </ul>
+    </section>
+}

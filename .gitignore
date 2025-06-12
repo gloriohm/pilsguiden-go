@@ -10,6 +10,7 @@
 # Go build cache
 /pkg/
 /bin/
+/tmp/
 
 # Secrets and config
 .env
