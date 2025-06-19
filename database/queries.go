@@ -40,13 +40,28 @@ func GetBarsByFylke(conn *pgx.Conn, fylke int) ([]models.Bar, error) {
 func GetBarBySlug(conn *pgx.Conn, slug string) (*models.Bar, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT bar, size, pint FROM bars WHERE slug = $1`
-
+	query := `SELECT bar, size, pint, address FROM bars WHERE slug = $1`
 	row := conn.QueryRow(ctx, query, slug)
+
 	var bar models.Bar
-	if err := row.Scan(&bar.Name, &bar.Size, &bar.Pint); err != nil {
-		return nil, fmt.Errorf("scanning row: %w", err)
+	if err := row.Scan(&bar.Name, &bar.Size, &bar.Pint, &bar.Address); err != nil {
+		return nil, fmt.Errorf("db scan: %w", err)
 	}
 
 	return &bar, nil
+}
+
+func GetAboutPageData(conn *pgx.Conn) (*models.AboutInfo, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `SELECT COUNT(*) AS total, MIN(current_pint), MAX(current_pint) FROM current_bars_view`
+	row := conn.QueryRow(ctx, query)
+
+	var about models.AboutInfo
+	if err := row.Scan(&about.Total, &about.MinPrice, &about.MaxPrice); err != nil {
+		return nil, err
+	}
+	diff := about.MaxPrice - about.MinPrice
+	about.Diff = diff
+	return &about, nil
 }

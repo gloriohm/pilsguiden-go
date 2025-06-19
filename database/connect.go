@@ -17,7 +17,7 @@ func InitDB() (*pgx.Conn, error) {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		return nil, fmt.Errorf("unable to connect to get env: %w", err)
 	}
 	dsn := fmt.Sprintf(
 		"user=%s password=%s host=%s port=%s dbname=%s sslmode=require",

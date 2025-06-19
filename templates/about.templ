@@ -1,8 +1,18 @@
 package templates
 
-templ About() {
+import "go-router/models"
+
+templ About(about *models.AboutInfo) {
     <section>
         <h1>About Us</h1>
         <p>We pour beer and build Go web apps.</p>
+        <p>Pilsguiden ble etablert i september 2023 med et mål om å være den
+        mest komplette og oppdaterte siden for ølpriser i Norge. Akkurat nå er
+        det {about.Total} serveringssteder på siden fordelt over alle fylkene med Svalbard.</p>
+        <p>Ølprisen kan variere voldsomt i Norge. Blant serveringsstedene på siden,
+        koster den billigste ølen {about.MinPrice}kr og den dyreste {about.MaxPrice}kr, noe som utgjør en forskjell
+        på {about.Diff}kr.* Pilsguiden ble til for å lose deg i retning et serveringssted som passer
+        din økonomi og for å skape litt forutsigbarhet når du ber om en pils.</p>
+        <p>* Alle oppgitte priser er NOK per halvliter øl.</p>
     </section>
 }

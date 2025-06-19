@@ -17,24 +17,27 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+type App struct {
+	DB *pgx.Conn
+}
+
 func main() {
 	conn, err := database.InitDB()
 	if err != nil {
 		log.Fatal(err)
 	}
+	app := &App{DB: conn}
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		templates.Layout("Home", templates.Home()).Render(r.Context(), w)
 	})
-	r.Get("/about", func(w http.ResponseWriter, r *http.Request) {
-		templates.Layout("About", templates.About()).Render(r.Context(), w)
-	})
-	r.Get("/bar/{slug}", handleBar)
+	r.Get("/about", app.handleAbout)
+	r.Get("/bar/{slug}", app.handleBar)
 
 	r.Get("/list", func(w http.ResponseWriter, r *http.Request) {
-		bars, err := GetBarsByFylke(conn, 2)
+		bars, err := database.GetBarsByFylke(conn, 2)
 		if err != nil {
 			log.Fatalf("unable to get bars: %v", err)
 		}
@@ -65,9 +68,22 @@ func main() {
 	http.ListenAndServe(":3000", r)
 }
 
-func handleBar(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
+func (a *App) handleHome(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (a *App) handleAbout(w http.ResponseWriter, r *http.Request) {
+	data, err := database.GetAboutPageData(a.DB)
+	if err != nil {
+		fmt.Println("Error getting about info:", err)
+		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
+	}
+	templates.Layout("About", templates.About(data)).Render(r.Context(), w)
+}
+
+func (a *App) handleBar(w http.ResponseWriter, r *http.Request) {
 	barParam := chi.URLParam(r, "slug")
-	bar, err := database.GetBarBySlug(conn, barParam)
+	bar, err := database.GetBarBySlug(a.DB, barParam)
 	if err != nil {
 		fmt.Println("Error fetching bar:", err)
 	}

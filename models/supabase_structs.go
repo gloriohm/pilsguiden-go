@@ -51,3 +51,10 @@ type BarOSM struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 }
+
+type AboutInfo struct {
+	Total    int
+	MaxPrice int
+	MinPrice int
+	Diff     int
+}
