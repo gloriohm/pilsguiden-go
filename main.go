@@ -30,9 +30,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		templates.Layout("Home", templates.Home()).Render(r.Context(), w)
-	})
+	r.Get("/", app.handleHome)
 	r.Get("/about", app.handleAbout)
 	r.Get("/bar/{slug}", app.handleBar)
 
@@ -69,7 +67,27 @@ func main() {
 }
 
 func (a *App) handleHome(w http.ResponseWriter, r *http.Request) {
-
+	totalBars, err := database.GetTotalBars(a.DB)
+	if err != nil || totalBars == 0 {
+		fmt.Println("Error total bars:", err)
+		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
+	}
+	fylker, err := database.GetFylker(a.DB)
+	if err != nil {
+		fmt.Println("Error loading fylker:", err)
+		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
+	}
+	topTen, err := database.GetTopTen(a.DB)
+	if err != nil {
+		fmt.Println("Error top ten bars:", err)
+		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
+	}
+	bottomTen, err := database.GetBottomTen(a.DB)
+	if err != nil {
+		fmt.Println("Error loading bottom ten bars:", err)
+		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
+	}
+	templates.Layout("Home", templates.Home(totalBars, fylker, templates.List(topTen), templates.List(bottomTen))).Render(r.Context(), w)
 }
 
 func (a *App) handleAbout(w http.ResponseWriter, r *http.Request) {

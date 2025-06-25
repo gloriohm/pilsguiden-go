@@ -1,8 +1,19 @@
 package templates
 
-templ Home() {
+import "go-router/models"
+
+templ Home(total int, fylker []models.Location, topList templ.Component, bottomList templ.Component) {
     <section>
-        <h1>Welcome to the homepage!</h1>
-        <p>This is where the magic begins.</p>
+        <h1>Velkommen til Pilsguiden! Vi har pris på {total} serveringssteder!</h1>
+        <h2>Fylker:</h2>
+        <ul>
+            for _, fylke := range fylker {
+            <li>{fylke.Name}</li>
+        }
+        </ul>
+        <h2>Billigste ti!</h2>
+        @topList
+        <h2>Dyreste ti!</h2>
+        @bottomList
     </section>
 }

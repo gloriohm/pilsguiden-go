@@ -65,3 +65,145 @@ func GetAboutPageData(conn *pgx.Conn) (*models.AboutInfo, error) {
 	about.Diff = diff
 	return &about, nil
 }
+
+// Get locations by hierarchy queries
+func GetFylker(conn *pgx.Conn) ([]models.Location, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var fylker []models.Location
+	query := `SELECT id, name, slug, hierarchy, p_fylke, p_sted FROM locations WHERE hierarchy = 'fylke'`
+	rows, err := conn.Query(ctx, query)
+	if err != nil {
+		return fylker, err
+	}
+
+	for rows.Next() {
+		var location models.Location
+		if err := rows.Scan(&location.ID, &location.Name, &location.Slug, &location.Hierarchy, &location.ParentFylke, &location.ParentKommune); err != nil {
+			return fylker, fmt.Errorf("scanning row: %w", err)
+		}
+		fylker = append(fylker, location)
+	}
+
+	if rows.Err() != nil {
+		return fylker, fmt.Errorf("iterating rows: %w", rows.Err())
+	}
+
+	return fylker, nil
+}
+
+func Getkommuner(conn *pgx.Conn) ([]models.Location, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var kommuner []models.Location
+	query := `SELECT id, name, slug, hierarchy, p_fylke, p_sted FROM locations WHERE hierarchy = 'sted'`
+	rows, err := conn.Query(ctx, query)
+	if err != nil {
+		return kommuner, err
+	}
+
+	for rows.Next() {
+		var location models.Location
+		if err := rows.Scan(&location.ID, &location.Name, &location.Slug, &location.Hierarchy, &location.ParentFylke, &location.ParentKommune); err != nil {
+			return kommuner, fmt.Errorf("scanning row: %w", err)
+		}
+		kommuner = append(kommuner, location)
+	}
+
+	if rows.Err() != nil {
+		return kommuner, fmt.Errorf("iterating rows: %w", rows.Err())
+	}
+
+	return kommuner, nil
+}
+
+func Getsteder(conn *pgx.Conn) ([]models.Location, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var steder []models.Location
+	query := `SELECT id, name, slug, hierarchy, p_fylke, p_sted FROM locations WHERE hierarchy = 'nabolag'`
+	rows, err := conn.Query(ctx, query)
+	if err != nil {
+		return steder, err
+	}
+
+	for rows.Next() {
+		var location models.Location
+		if err := rows.Scan(&location.ID, &location.Name, &location.Slug, &location.Hierarchy, &location.ParentFylke, &location.ParentKommune); err != nil {
+			return steder, fmt.Errorf("scanning row: %w", err)
+		}
+		steder = append(steder, location)
+	}
+
+	if rows.Err() != nil {
+		return steder, fmt.Errorf("iterating rows: %w", rows.Err())
+	}
+
+	return steder, nil
+}
+
+// Statistical Queries
+func GetTotalBars(conn *pgx.Conn) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `SELECT COUNT(*) AS total FROM current_bars_view`
+	row := conn.QueryRow(ctx, query)
+
+	var total int
+	if err := row.Scan(&total); err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
+func GetTopTen(conn *pgx.Conn) ([]models.Bar, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var bars []models.Bar
+	query := `SELECT bar, size, current_pint FROM current_bars_view ORDER BY current_pint ASC LIMIT 10`
+
+	rows, err := conn.Query(ctx, query)
+	if err != nil {
+		return bars, err
+	}
+
+	for rows.Next() {
+		var bar models.Bar
+		if err := rows.Scan(&bar.Name, &bar.Size, &bar.Pint); err != nil {
+			return bars, fmt.Errorf("scanning row: %w", err)
+		}
+		bars = append(bars, bar)
+	}
+
+	if rows.Err() != nil {
+		return bars, fmt.Errorf("iterating rows: %w", rows.Err())
+	}
+
+	return bars, nil
+}
+
+func GetBottomTen(conn *pgx.Conn) ([]models.Bar, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var bars []models.Bar
+	query := `SELECT bar, size, current_pint FROM current_bars_view ORDER BY current_pint DESC LIMIT 10`
+
+	rows, err := conn.Query(ctx, query)
+	if err != nil {
+		return bars, err
+	}
+
+	for rows.Next() {
+		var bar models.Bar
+		if err := rows.Scan(&bar.Name, &bar.Size, &bar.Pint); err != nil {
+			return bars, fmt.Errorf("scanning row: %w", err)
+		}
+		bars = append(bars, bar)
+	}
+
+	if rows.Err() != nil {
+		return bars, fmt.Errorf("iterating rows: %w", rows.Err())
+	}
+
+	return bars, nil
+}

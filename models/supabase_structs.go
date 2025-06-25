@@ -3,6 +3,7 @@ package models
 import "time"
 
 type Bar struct {
+	ID int `json:"id"`
 	BarManual
 	BarAutoFormat
 	BarOSM
@@ -57,4 +58,13 @@ type AboutInfo struct {
 	MaxPrice int
 	MinPrice int
 	Diff     int
+}
+
+type Location struct {
+	ID            int    `json:"id"`
+	Name          string `json:"name"`
+	Slug          string `json:"slug"`
+	Hierarchy     string `json:"hierrachy"`
+	ParentFylke   *int   `json:"p_fylke"`
+	ParentKommune *int   `json:"p_sted"`
 }
