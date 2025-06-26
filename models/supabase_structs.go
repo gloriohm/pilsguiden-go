@@ -68,3 +68,9 @@ type Location struct {
 	ParentFylke   *int   `json:"p_fylke"`
 	ParentKommune *int   `json:"p_sted"`
 }
+
+type Brewery struct {
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	Popular bool   `json:"popular"`
+}

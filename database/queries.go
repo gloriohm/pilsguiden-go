@@ -92,7 +92,7 @@ func GetFylker(conn *pgx.Conn) ([]models.Location, error) {
 	return fylker, nil
 }
 
-func Getkommuner(conn *pgx.Conn) ([]models.Location, error) {
+func GetKommuner(conn *pgx.Conn) ([]models.Location, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var kommuner []models.Location
@@ -117,7 +117,7 @@ func Getkommuner(conn *pgx.Conn) ([]models.Location, error) {
 	return kommuner, nil
 }
 
-func Getsteder(conn *pgx.Conn) ([]models.Location, error) {
+func GetSteder(conn *pgx.Conn) ([]models.Location, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var steder []models.Location
@@ -206,4 +206,30 @@ func GetBottomTen(conn *pgx.Conn) ([]models.Bar, error) {
 	}
 
 	return bars, nil
+}
+
+func GetBreweries(conn *pgx.Conn) ([]models.Brewery, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var breweries []models.Brewery
+	query := `SELECT id, name, popular FROM breweries`
+
+	rows, err := conn.Query(ctx, query)
+	if err != nil {
+		return breweries, err
+	}
+
+	for rows.Next() {
+		var brewery models.Brewery
+		if err := rows.Scan(&brewery.ID, &brewery.Name, &brewery.Popular); err != nil {
+			return breweries, fmt.Errorf("scanning row: %w", err)
+		}
+		breweries = append(breweries, brewery)
+	}
+
+	if rows.Err() != nil {
+		return breweries, fmt.Errorf("iterating rows: %w", rows.Err())
+	}
+
+	return breweries, nil
 }

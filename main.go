@@ -7,6 +7,7 @@ import (
 
 	"go-router/database"
 	"go-router/internal/handlers"
+	"go-router/internal/stores"
 	"go-router/models"
 	"go-router/templates"
 
@@ -27,6 +28,7 @@ func main() {
 		log.Fatal(err)
 	}
 	app := &App{DB: conn}
+	database.InitStaticData(app.DB)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -72,11 +74,7 @@ func (a *App) handleHome(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error total bars:", err)
 		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
 	}
-	fylker, err := database.GetFylker(a.DB)
-	if err != nil {
-		fmt.Println("Error loading fylker:", err)
-		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
-	}
+	fylker := stores.AppStore.GetFylkerData()
 	topTen, err := database.GetTopTen(a.DB)
 	if err != nil {
 		fmt.Println("Error top ten bars:", err)
