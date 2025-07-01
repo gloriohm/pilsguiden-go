@@ -61,16 +61,20 @@ type AboutInfo struct {
 }
 
 type Location struct {
-	ID            int    `json:"id"`
-	Name          string `json:"name"`
-	Slug          string `json:"slug"`
-	Hierarchy     string `json:"hierrachy"`
-	ParentFylke   *int   `json:"p_fylke"`
-	ParentKommune *int   `json:"p_sted"`
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Slug      string `json:"slug"`
+	Hierarchy string `json:"hierrachy"`
+	Parent    *int   `json:"parent"`
 }
 
 type Brewery struct {
 	ID      int    `json:"id"`
 	Name    string `json:"name"`
 	Popular bool   `json:"popular"`
+}
+
+type UrlPair struct {
+	Name string
+	Slug string
 }

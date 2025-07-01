@@ -1,0 +1,13 @@
+package templates
+
+import "go-router/models"
+
+templ NavTree(urlParts []models.UrlPair) {
+    <nav>
+        <a href="/">Hjem</a>
+        for _, url := range urlParts {
+            <span> > </span>
+            <a href={"/liste" + url.Slug}>{url.Name}</a>
+        }
+    </nav>
+}

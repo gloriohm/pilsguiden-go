@@ -78,10 +78,32 @@ func (s *StaticStore) GetFylkerData() []models.Location {
 	return s.Fylker.Data
 }
 
+func (s *StaticStore) GetFylkeBySlug(slug string) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, fylke := range s.Fylker.Data {
+		if fylke.Slug == slug {
+			return fylke.ID
+		}
+	}
+	return 0
+}
+
 func (s *StaticStore) GetKommunerData() []models.Location {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.Kommuner.Data
+}
+
+func (s *StaticStore) GetKommuneBySlug(slug string) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, kommune := range s.Kommuner.Data {
+		if kommune.Slug == slug {
+			return kommune.ID
+		}
+	}
+	return 0
 }
 
 func (s *StaticStore) GetStederData() []models.Location {
@@ -90,8 +112,67 @@ func (s *StaticStore) GetStederData() []models.Location {
 	return s.Steder.Data
 }
 
+func (s *StaticStore) GetStedBySlug(slug string) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, sted := range s.Steder.Data {
+		if sted.Slug == slug {
+			return sted.ID
+		}
+	}
+	return 0
+}
+
 func (s *StaticStore) GetBreweriesData() []models.Brewery {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.Breweries.Data
+}
+
+func (s *StaticStore) GetLocationBySlug(slug, level string) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var src []models.Location
+	switch level {
+	case "fylke":
+		src = s.Fylker.Data
+	case "kommune":
+		src = s.Kommuner.Data
+	case "sted":
+		src = s.Steder.Data
+	default:
+		return 0
+	}
+
+	for _, loc := range src {
+		if loc.Slug == slug {
+			return loc.ID
+		}
+	}
+
+	return 0
+}
+
+func (s *StaticStore) GetLocationsByParent(ID int, level string) []models.Location {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var src []models.Location
+	switch level {
+	case "kommune":
+		src = s.Kommuner.Data
+	case "sted":
+		src = s.Steder.Data
+	default:
+		return nil
+	}
+
+	var matches []models.Location
+	for _, loc := range src {
+		if *loc.Parent == ID {
+			matches = append(matches, loc)
+		}
+	}
+	return matches
 }

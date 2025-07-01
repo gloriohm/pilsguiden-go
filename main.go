@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"go-router/database"
-	"go-router/internal/handlers"
 	"go-router/internal/stores"
 	"go-router/models"
 	"go-router/templates"
@@ -36,14 +35,6 @@ func main() {
 	r.Get("/about", app.handleAbout)
 	r.Get("/bar/{slug}", app.handleBar)
 
-	r.Get("/list", func(w http.ResponseWriter, r *http.Request) {
-		bars, err := database.GetBarsByFylke(conn, 2)
-		if err != nil {
-			log.Fatalf("unable to get bars: %v", err)
-		}
-		templates.Layout("List", templates.List(bars)).Render(r.Context(), w)
-	})
-
 	r.Route("/admin", func(r chi.Router) {
 		r.Get("/create-bar", func(w http.ResponseWriter, r *http.Request) {
 			templates.Layout("Create Bar", templates.BarManualForm()).Render(r.Context(), w)
@@ -53,13 +44,13 @@ func main() {
 
 	r.Route("/liste", func(r chi.Router) {
 		r.Route("/{fylke}", func(r chi.Router) {
-			r.Get("/", handlers.HandleListe)
+			r.Get("/", app.handleListFylke)
 
 			r.Route("/{kommune}", func(r chi.Router) {
-				r.Get("/", handlers.HandleListe)
+				r.Get("/", app.handleListKommune)
 
 				r.Route("/{sted}", func(r chi.Router) {
-					r.Get("/", handlers.HandleListe)
+					r.Get("/", app.handleListSted)
 				})
 			})
 		})
@@ -69,12 +60,12 @@ func main() {
 }
 
 func (a *App) handleHome(w http.ResponseWriter, r *http.Request) {
+	fylker := stores.AppStore.GetFylkerData()
 	totalBars, err := database.GetTotalBars(a.DB)
 	if err != nil || totalBars == 0 {
 		fmt.Println("Error total bars:", err)
 		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
 	}
-	fylker := stores.AppStore.GetFylkerData()
 	topTen, err := database.GetTopTen(a.DB)
 	if err != nil {
 		fmt.Println("Error top ten bars:", err)
@@ -124,4 +115,66 @@ func handleCreateBar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	templ.Handler(templates.BarPreview(preview)).ServeHTTP(w, r)
+}
+
+func (a *App) handleListFylke(w http.ResponseWriter, r *http.Request) {
+	currentLocation := "/" + chi.URLParam(r, "fylke")
+	locationID := stores.AppStore.GetLocationBySlug(currentLocation, "fylke")
+	nextLocations := stores.AppStore.GetLocationsByParent(locationID, "kommune")
+	if locationID == 0 {
+		http.Error(w, "Ugyldig sted", http.StatusNotFound)
+	}
+	bars, err := database.GetBarsByFylke(a.DB, locationID)
+	if err != nil {
+		log.Fatalf("unable to get bars: %v", err)
+	}
+	var urlParts []models.UrlPair
+	urlParts = append(urlParts, models.UrlPair{
+		Name: "Oslo",
+		Slug: "oslo",
+	})
+
+	templates.Layout("List", templates.ListLayout(templates.NavTree(urlParts), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
+}
+
+func (a *App) handleListKommune(w http.ResponseWriter, r *http.Request) {
+	currentLocation := "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune")
+	locationID := stores.AppStore.GetLocationBySlug(currentLocation, "kommune")
+	nextLocations := stores.AppStore.GetLocationsByParent(locationID, "sted")
+	if locationID == 0 {
+		http.Error(w, "Ugyldig sted", http.StatusNotFound)
+	}
+	bars, err := database.GetBarsByKommune(a.DB, locationID)
+	if err != nil {
+		log.Fatalf("unable to get bars: %v", err)
+	}
+	var urlParts []models.UrlPair
+	urlParts = append(urlParts, models.UrlPair{
+		Name: "Oslo",
+		Slug: "oslo",
+	})
+
+	templates.Layout("List", templates.ListLayout(templates.NavTree(urlParts), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
+}
+
+func (a *App) handleListSted(w http.ResponseWriter, r *http.Request) {
+	currentLocation := "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune") + "/" + chi.URLParam(r, "sted")
+	parentKommune := "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune")
+	locationID := stores.AppStore.GetLocationBySlug(currentLocation, "sted")
+	parentID := stores.AppStore.GetLocationBySlug(parentKommune, "kommune")
+	nextLocations := stores.AppStore.GetLocationsByParent(parentID, "sted")
+	if locationID == 0 {
+		http.Error(w, "Ugyldig sted", http.StatusNotFound)
+	}
+	bars, err := database.GetBarsBySted(a.DB, locationID)
+	if err != nil {
+		log.Fatalf("unable to get bars: %v", err)
+	}
+	var urlParts []models.UrlPair
+	urlParts = append(urlParts, models.UrlPair{
+		Name: "Oslo",
+		Slug: "oslo",
+	})
+
+	templates.Layout("List", templates.ListLayout(templates.NavTree(urlParts), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
 }

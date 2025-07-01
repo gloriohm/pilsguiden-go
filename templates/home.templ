@@ -8,7 +8,7 @@ templ Home(total int, fylker []models.Location, topList templ.Component, bottomL
         <h2>Fylker:</h2>
         <ul>
             for _, fylke := range fylker {
-            <li>{fylke.Name}</li>
+            <li><a href={"/liste" + fylke.Slug}>{fylke.Name}</a></li>
         }
         </ul>
         <h2>Billigste ti!</h2>

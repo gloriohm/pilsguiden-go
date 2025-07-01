@@ -10,16 +10,19 @@ import (
 )
 
 // Get current bars
-func GetBarsByFylke(conn *pgx.Conn, fylke int) ([]models.Bar, error) {
+func getBarsByLocation(conn *pgx.Conn, column string, id int) ([]models.Bar, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var bars []models.Bar
-	query := `SELECT bar, size, current_pint FROM current_bars_view WHERE fylke = $1`
 
-	rows, err := conn.Query(ctx, query, fylke)
+	// Be very cautious: don't format raw input into SQL without validation
+	query := fmt.Sprintf(`SELECT bar, size, current_pint FROM current_bars_view WHERE %s = $1`, column)
+
+	rows, err := conn.Query(ctx, query, id)
 	if err != nil {
 		return bars, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var bar models.Bar
@@ -34,6 +37,18 @@ func GetBarsByFylke(conn *pgx.Conn, fylke int) ([]models.Bar, error) {
 	}
 
 	return bars, nil
+}
+
+func GetBarsByFylke(conn *pgx.Conn, fylke int) ([]models.Bar, error) {
+	return getBarsByLocation(conn, "fylke", fylke)
+}
+
+func GetBarsByKommune(conn *pgx.Conn, kommune int) ([]models.Bar, error) {
+	return getBarsByLocation(conn, "sted", kommune)
+}
+
+func GetBarsBySted(conn *pgx.Conn, sted int) ([]models.Bar, error) {
+	return getBarsByLocation(conn, "nabolag", sted)
 }
 
 // Get single bar
@@ -71,7 +86,7 @@ func GetFylker(conn *pgx.Conn) ([]models.Location, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var fylker []models.Location
-	query := `SELECT id, name, slug, hierarchy, p_fylke, p_sted FROM locations WHERE hierarchy = 'fylke'`
+	query := `SELECT id, name, slug, hierarchy, parent FROM locs WHERE hierarchy = 'fylke'`
 	rows, err := conn.Query(ctx, query)
 	if err != nil {
 		return fylker, err
@@ -79,7 +94,7 @@ func GetFylker(conn *pgx.Conn) ([]models.Location, error) {
 
 	for rows.Next() {
 		var location models.Location
-		if err := rows.Scan(&location.ID, &location.Name, &location.Slug, &location.Hierarchy, &location.ParentFylke, &location.ParentKommune); err != nil {
+		if err := rows.Scan(&location.ID, &location.Name, &location.Slug, &location.Hierarchy, &location.Parent); err != nil {
 			return fylker, fmt.Errorf("scanning row: %w", err)
 		}
 		fylker = append(fylker, location)
@@ -96,7 +111,7 @@ func GetKommuner(conn *pgx.Conn) ([]models.Location, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var kommuner []models.Location
-	query := `SELECT id, name, slug, hierarchy, p_fylke, p_sted FROM locations WHERE hierarchy = 'sted'`
+	query := `SELECT id, name, slug, hierarchy, parent FROM locs WHERE hierarchy = 'sted'`
 	rows, err := conn.Query(ctx, query)
 	if err != nil {
 		return kommuner, err
@@ -104,7 +119,7 @@ func GetKommuner(conn *pgx.Conn) ([]models.Location, error) {
 
 	for rows.Next() {
 		var location models.Location
-		if err := rows.Scan(&location.ID, &location.Name, &location.Slug, &location.Hierarchy, &location.ParentFylke, &location.ParentKommune); err != nil {
+		if err := rows.Scan(&location.ID, &location.Name, &location.Slug, &location.Hierarchy, &location.Parent); err != nil {
 			return kommuner, fmt.Errorf("scanning row: %w", err)
 		}
 		kommuner = append(kommuner, location)
@@ -121,7 +136,7 @@ func GetSteder(conn *pgx.Conn) ([]models.Location, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var steder []models.Location
-	query := `SELECT id, name, slug, hierarchy, p_fylke, p_sted FROM locations WHERE hierarchy = 'nabolag'`
+	query := `SELECT id, name, slug, hierarchy, parent FROM locs WHERE hierarchy = 'nabolag'`
 	rows, err := conn.Query(ctx, query)
 	if err != nil {
 		return steder, err
@@ -129,7 +144,7 @@ func GetSteder(conn *pgx.Conn) ([]models.Location, error) {
 
 	for rows.Next() {
 		var location models.Location
-		if err := rows.Scan(&location.ID, &location.Name, &location.Slug, &location.Hierarchy, &location.ParentFylke, &location.ParentKommune); err != nil {
+		if err := rows.Scan(&location.ID, &location.Name, &location.Slug, &location.Hierarchy, &location.Parent); err != nil {
 			return steder, fmt.Errorf("scanning row: %w", err)
 		}
 		steder = append(steder, location)

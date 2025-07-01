@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"go-router/internal/stores"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -13,11 +14,20 @@ func HandleListe(w http.ResponseWriter, r *http.Request) {
 
 	switch {
 	case sted != "":
-		// list for sted
+		stedID := stores.AppStore.GetStedBySlug(sted)
+		if stedID == 0 {
+			http.Error(w, "Ugyldig sted", http.StatusNotFound)
+		}
 	case kommune != "":
-		// list for kommune
+		kommuneID := stores.AppStore.GetKommuneBySlug(kommune)
+		if kommuneID == 0 {
+			http.Error(w, "Ugyldig sted", http.StatusNotFound)
+		}
 	case fylke != "":
-		// list for fylke
+		fylkeID := stores.AppStore.GetFylkeBySlug(fylke)
+		if fylkeID == 0 {
+			http.Error(w, "Ugyldig sted", http.StatusNotFound)
+		}
 	default:
 		// invalid route
 	}

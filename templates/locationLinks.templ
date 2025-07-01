@@ -1,0 +1,13 @@
+package templates
+
+import "go-router/models"
+
+templ LocationLinks(locations []models.Location) {
+    <div>
+        <ul>
+            for _, location := range locations {
+            <li><a href={"/liste" + location.Slug}>{location.Name}</a></li>
+        }
+        </ul>
+    </div>
+}
