@@ -7,7 +7,7 @@ templ NavTree(urlParts []models.UrlPair) {
         <a href="/">Hjem</a>
         for _, url := range urlParts {
             <span> > </span>
-            <a href={"/liste" + url.Slug}>{url.Name}</a>
+            <a href={templ.SafeURL("/liste" + url.Slug)}>{url.Name}</a>
         }
     </nav>
 }
