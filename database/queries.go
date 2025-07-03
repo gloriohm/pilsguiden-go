@@ -39,6 +39,35 @@ func GetBarsByLocation(conn *pgx.Conn, id int, column string) ([]models.Bar, err
 	return bars, nil
 }
 
+func GetBarsByLocationAndTime(conn *pgx.Conn, id int, column, date string, customTime time.Time) ([]models.Bar, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var bars []models.Bar
+
+	// Be very cautious: don't format raw input into SQL without validation
+	query := getBarsByTimeQuery
+
+	rows, err := conn.Query(ctx, query, date, customTime, id, column)
+	if err != nil {
+		return bars, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var bar models.Bar
+		if err := rows.Scan(&bar.Name, &bar.Size, &bar.Pint); err != nil {
+			return bars, fmt.Errorf("scanning row: %w", err)
+		}
+		bars = append(bars, bar)
+	}
+
+	if rows.Err() != nil {
+		return bars, fmt.Errorf("iterating rows: %w", rows.Err())
+	}
+
+	return bars, nil
+}
+
 // Get single bar
 func GetBarBySlug(conn *pgx.Conn, slug string) (*models.Bar, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -236,3 +265,49 @@ func GetBreweries(conn *pgx.Conn) ([]models.Brewery, error) {
 
 	return breweries, nil
 }
+
+const getBarsByTimeQuery = `
+WITH vars AS (
+    SELECT $1::date AS current_date, $2::time AS current_time
+),
+hk AS (
+    SELECT *
+    FROM happy_keys, vars
+    WHERE passes_midnight IS false
+      AND (day & (1 << EXTRACT(DOW FROM vars.current_date)::INT)) > 0
+      AND vars.current_time >= from_time
+      AND vars.current_time < until_time
+    UNION ALL
+    SELECT *
+    FROM happy_keys, vars
+    WHERE passes_midnight IS true
+      AND (
+           ((day & (1 << EXTRACT(DOW FROM vars.current_date)::INT)) > 0 AND vars.current_time >= from_time)
+           OR
+           ((end_day & (1 << EXTRACT(DOW FROM vars.current_date)::INT)) > 0 AND vars.current_time < until_time)
+      )
+)
+SELECT 
+    b.id, b.bar, b.price, b.size, b.pint, b.price_checked,
+    b.address, b.fylke, l_fylke.name AS fylke_name, l_fylke.slug AS fylke_slug,
+    b.sted, l_kommune.name AS kommune_name, l_kommune.slug AS kommune_slug,
+    b.nabolag, l_sted.name AS sted_name, l_sted.slug AS sted_slug,
+    b.flyplass, b.brewery, b.latitude, b.longitude,
+    CASE WHEN b.timed_prices AND hk.pint IS NOT NULL THEN hk.pint ELSE b.pint END AS current_pint,
+    CASE WHEN b.timed_prices AND hk.price IS NOT NULL THEN hk.price ELSE b.price END AS current_price,
+    hk.from_time, hk.until_time, hk.price_checked AS hk_checked, hk.id AS hk_id
+FROM bars b
+LEFT JOIN hk ON b.id = hk.bar
+LEFT JOIN locations l_fylke ON l_fylke.id = b.fylke
+LEFT JOIN locations l_kommune ON l_kommune.id = b.sted
+LEFT JOIN locations l_sted ON l_sted.id = b.nabolag
+WHERE b.is_active IS true
+  AND (
+      CASE 
+          WHEN $4 = 'fylke' THEN b.fylke 
+          WHEN $4 = 'kommune' THEN b.sted 
+          WHEN $4 = 'sted' THEN b.nabolag 
+      END
+  ) = $3
+ORDER BY current_pint ASC
+`

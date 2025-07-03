@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"go-router/database"
+	"go-router/internal/handlers"
 	"go-router/internal/stores"
 	"go-router/internal/utils"
 	"go-router/models"
@@ -16,11 +18,14 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-playground/form"
 	"github.com/jackc/pgx/v5"
+	"github.com/patrickmn/go-cache"
 )
 
 type App struct {
 	DB *pgx.Conn
 }
+
+var sessionStore = cache.New(30*time.Minute, 10*time.Minute)
 
 func main() {
 	conn, err := database.InitDB()
@@ -32,6 +37,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+	r.Use(handlers.SessionMiddleware(sessionStore))
 	r.Get("/", app.handleHome)
 	r.Get("/about", app.handleAbout)
 	r.Get("/bar/{slug}", app.handleBar)
@@ -56,6 +62,8 @@ func main() {
 			})
 		})
 	})
+
+	// r.Get("/kart", app.handleMap)
 
 	http.ListenAndServe(":3000", r)
 }
@@ -119,6 +127,8 @@ func handleCreateBar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleListFylke(w http.ResponseWriter, r *http.Request) {
+	val := handlers.GetSessionID(r)
+	fmt.Println(val)
 	params := map[string]string{
 		"fylke": "/" + chi.URLParam(r, "fylke"),
 	}
@@ -130,7 +140,6 @@ func (a *App) handleListFylke(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nextLocations := stores.AppStore.GetLocationsByParent(nav.Fylke.ID, "kommune") // get all kommuner under current fylke
-
 	bars, err := database.GetBarsByLocation(a.DB, nav.Fylke.ID, "fylke")
 	if err != nil {
 		log.Fatalf("unable to get bars: %v", err)
