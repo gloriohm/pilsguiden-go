@@ -10,7 +10,7 @@ import (
 )
 
 // Get current bars
-func getBarsByLocation(conn *pgx.Conn, column string, id int) ([]models.Bar, error) {
+func GetBarsByLocation(conn *pgx.Conn, id int, column string) ([]models.Bar, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var bars []models.Bar
@@ -37,18 +37,6 @@ func getBarsByLocation(conn *pgx.Conn, column string, id int) ([]models.Bar, err
 	}
 
 	return bars, nil
-}
-
-func GetBarsByFylke(conn *pgx.Conn, fylke int) ([]models.Bar, error) {
-	return getBarsByLocation(conn, "fylke", fylke)
-}
-
-func GetBarsByKommune(conn *pgx.Conn, kommune int) ([]models.Bar, error) {
-	return getBarsByLocation(conn, "sted", kommune)
-}
-
-func GetBarsBySted(conn *pgx.Conn, sted int) ([]models.Bar, error) {
-	return getBarsByLocation(conn, "nabolag", sted)
 }
 
 // Get single bar

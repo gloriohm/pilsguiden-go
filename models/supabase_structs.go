@@ -60,10 +60,14 @@ type AboutInfo struct {
 	Diff     int
 }
 
+type BaseLocation struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+}
+
 type Location struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	Slug      string `json:"slug"`
+	BaseLocation
 	Hierarchy string `json:"hierrachy"`
 	Parent    *int   `json:"parent"`
 }
@@ -74,7 +78,8 @@ type Brewery struct {
 	Popular bool   `json:"popular"`
 }
 
-type UrlPair struct {
-	Name string
-	Slug string
+type UrlNav struct {
+	Fylke   BaseLocation
+	Kommune BaseLocation
+	Sted    BaseLocation
 }

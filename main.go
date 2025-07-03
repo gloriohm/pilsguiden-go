@@ -7,6 +7,7 @@ import (
 
 	"go-router/database"
 	"go-router/internal/stores"
+	"go-router/internal/utils"
 	"go-router/models"
 	"go-router/templates"
 
@@ -118,63 +119,67 @@ func handleCreateBar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleListFylke(w http.ResponseWriter, r *http.Request) {
-	currentLocation := "/" + chi.URLParam(r, "fylke")
-	locationID := stores.AppStore.GetLocationBySlug(currentLocation, "fylke")
-	nextLocations := stores.AppStore.GetLocationsByParent(locationID, "kommune")
-	if locationID == 0 {
-		http.Error(w, "Ugyldig sted", http.StatusNotFound)
+	params := map[string]string{
+		"fylke": "/" + chi.URLParam(r, "fylke"),
 	}
-	bars, err := database.GetBarsByFylke(a.DB, locationID)
+	nav, err := utils.SetNavParams(params)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		templates.Layout("Ugyldig sted", templates.ErrorPage()).Render(r.Context(), w)
+		return
+	}
+
+	nextLocations := stores.AppStore.GetLocationsByParent(nav.Fylke.ID, "kommune") // get all kommuner under current fylke
+
+	bars, err := database.GetBarsByLocation(a.DB, nav.Fylke.ID, "fylke")
 	if err != nil {
 		log.Fatalf("unable to get bars: %v", err)
 	}
-	var urlParts []models.UrlPair
-	urlParts = append(urlParts, models.UrlPair{
-		Name: "Oslo",
-		Slug: "oslo",
-	})
 
-	templates.Layout("List", templates.ListLayout(templates.NavTree(urlParts), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
+	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
 }
 
 func (a *App) handleListKommune(w http.ResponseWriter, r *http.Request) {
-	currentLocation := "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune")
-	locationID := stores.AppStore.GetLocationBySlug(currentLocation, "kommune")
-	nextLocations := stores.AppStore.GetLocationsByParent(locationID, "sted")
-	if locationID == 0 {
-		http.Error(w, "Ugyldig sted", http.StatusNotFound)
+	params := map[string]string{
+		"fylke":   "/" + chi.URLParam(r, "fylke"),
+		"kommune": "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune"),
 	}
-	bars, err := database.GetBarsByKommune(a.DB, locationID)
+	nav, err := utils.SetNavParams(params)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		templates.Layout("Ugyldig sted", templates.ErrorPage()).Render(r.Context(), w)
+		return
+	}
+
+	nextLocations := stores.AppStore.GetLocationsByParent(nav.Kommune.ID, "sted") //get all steder under current kommune
+
+	bars, err := database.GetBarsByLocation(a.DB, nav.Kommune.ID, "sted") //bytt til kommune ved migrering
 	if err != nil {
 		log.Fatalf("unable to get bars: %v", err)
 	}
-	var urlParts []models.UrlPair
-	urlParts = append(urlParts, models.UrlPair{
-		Name: "Oslo",
-		Slug: "oslo",
-	})
 
-	templates.Layout("List", templates.ListLayout(templates.NavTree(urlParts), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
+	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
 }
 
 func (a *App) handleListSted(w http.ResponseWriter, r *http.Request) {
-	currentLocation := "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune") + "/" + chi.URLParam(r, "sted")
-	parentKommune := "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune")
-	locationID := stores.AppStore.GetLocationBySlug(currentLocation, "sted")
-	parentID := stores.AppStore.GetLocationBySlug(parentKommune, "kommune")
-	nextLocations := stores.AppStore.GetLocationsByParent(parentID, "sted")
-	if locationID == 0 {
-		http.Error(w, "Ugyldig sted", http.StatusNotFound)
+	params := map[string]string{
+		"fylke":   "/" + chi.URLParam(r, "fylke"),
+		"kommune": "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune"),
+		"sted":    "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune") + "/" + chi.URLParam(r, "sted"),
 	}
-	bars, err := database.GetBarsBySted(a.DB, locationID)
+	nav, err := utils.SetNavParams(params)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		templates.Layout("Ugyldig sted", templates.ErrorPage()).Render(r.Context(), w)
+		return
+	}
+
+	nextLocations := stores.AppStore.GetLocationsByParent(nav.Kommune.ID, "sted") //get all steder under current kommune since we go no deeper
+
+	bars, err := database.GetBarsByLocation(a.DB, nav.Sted.ID, "nabolag") //bytt til sted ved migrering
 	if err != nil {
 		log.Fatalf("unable to get bars: %v", err)
 	}
-	var urlParts []models.UrlPair
-	urlParts = append(urlParts, models.UrlPair{
-		Name: "Oslo",
-		Slug: "oslo",
-	})
 
-	templates.Layout("List", templates.ListLayout(templates.NavTree(urlParts), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
+	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
 }

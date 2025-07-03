@@ -1,6 +1,7 @@
 package stores
 
 import (
+	"errors"
 	"go-router/models"
 	"sync"
 	"time"
@@ -129,7 +130,7 @@ func (s *StaticStore) GetBreweriesData() []models.Brewery {
 	return s.Breweries.Data
 }
 
-func (s *StaticStore) GetLocationBySlug(slug, level string) int {
+func (s *StaticStore) GetLocationBySlug(slug, level string) (models.BaseLocation, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -142,16 +143,16 @@ func (s *StaticStore) GetLocationBySlug(slug, level string) int {
 	case "sted":
 		src = s.Steder.Data
 	default:
-		return 0
+		return models.BaseLocation{}, errors.New("level not fylke, kommune, or sted")
 	}
 
 	for _, loc := range src {
 		if loc.Slug == slug {
-			return loc.ID
+			return models.BaseLocation{ID: loc.ID, Name: loc.Name, Slug: loc.Slug}, nil
 		}
 	}
 
-	return 0
+	return models.BaseLocation{}, errors.New("location not found by slug")
 }
 
 func (s *StaticStore) GetLocationsByParent(ID int, level string) []models.Location {
