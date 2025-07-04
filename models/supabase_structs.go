@@ -7,6 +7,25 @@ type Bar struct {
 	BarManual
 	BarAutoFormat
 	BarOSM
+	BarRelativeData
+	BarExpandedLocation
+}
+
+type BarRelativeData struct {
+	CurrentPint  int        `json:"current_pint"`
+	CurrentPrice int        `json:"current_price"`
+	FromTime     *time.Time `json:"from_time"`
+	UntilTime    *time.Time `json:"until_time"`
+	HappyChecked *time.Time `json:"hk_checked"`
+}
+
+type BarExpandedLocation struct {
+	FylkeName   string
+	FylkeSlug   string
+	KommuneName string
+	KommuneSlug string
+	StedName    *string
+	StedSlug    *string
 }
 
 type BarMetadata struct {

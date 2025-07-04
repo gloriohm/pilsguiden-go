@@ -37,7 +37,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Use(handlers.SessionMiddleware(sessionStore))
+	r.Use(handlers.SessionMiddleware)
 	r.Get("/", app.handleHome)
 	r.Get("/about", app.handleAbout)
 	r.Get("/bar/{slug}", app.handleBar)
@@ -127,24 +127,27 @@ func handleCreateBar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleListFylke(w http.ResponseWriter, r *http.Request) {
-	val := handlers.GetSessionID(r)
-	fmt.Println(val)
+	sessID := handlers.GetSessionID(r)
 	params := map[string]string{
 		"fylke": "/" + chi.URLParam(r, "fylke"),
 	}
 	nav, err := utils.SetNavParams(params)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		templates.Layout("Ugyldig sted", templates.ErrorPage()).Render(r.Context(), w)
+		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
 		return
 	}
-
 	nextLocations := stores.AppStore.GetLocationsByParent(nav.Fylke.ID, "kommune") // get all kommuner under current fylke
-	bars, err := database.GetBarsByLocation(a.DB, nav.Fylke.ID, "fylke")
+	var bars []models.Bar
+	pref := stores.GetSessionData(sessionStore, sessID)
+	if pref.Preferences.CustomTime {
+		bars, err = database.GetBarsByLocationAndTime(a.DB, nav.Fylke.ID, "fylke", pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
+	} else {
+		bars, err = database.GetBarsByLocation(a.DB, nav.Fylke.ID, "fylke")
+	}
 	if err != nil {
 		log.Fatalf("unable to get bars: %v", err)
 	}
-
 	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
 }
 
@@ -156,7 +159,7 @@ func (a *App) handleListKommune(w http.ResponseWriter, r *http.Request) {
 	nav, err := utils.SetNavParams(params)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		templates.Layout("Ugyldig sted", templates.ErrorPage()).Render(r.Context(), w)
+		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
 		return
 	}
 
@@ -179,7 +182,7 @@ func (a *App) handleListSted(w http.ResponseWriter, r *http.Request) {
 	nav, err := utils.SetNavParams(params)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		templates.Layout("Ugyldig sted", templates.ErrorPage()).Render(r.Context(), w)
+		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
 		return
 	}
 

@@ -39,7 +39,7 @@ func GetBarsByLocation(conn *pgx.Conn, id int, column string) ([]models.Bar, err
 	return bars, nil
 }
 
-func GetBarsByLocationAndTime(conn *pgx.Conn, id int, column, date string, customTime time.Time) ([]models.Bar, error) {
+func GetBarsByLocationAndTime(conn *pgx.Conn, id int, column, date, customTime string) ([]models.Bar, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var bars []models.Bar
@@ -55,7 +55,15 @@ func GetBarsByLocationAndTime(conn *pgx.Conn, id int, column, date string, custo
 
 	for rows.Next() {
 		var bar models.Bar
-		if err := rows.Scan(&bar.Name, &bar.Size, &bar.Pint); err != nil {
+		if err := rows.Scan(
+			&bar.ID, &bar.Name, &bar.Price, &bar.Size, &bar.Pint, &bar.PriceChecked,
+			&bar.Address, &bar.Fylke, &bar.FylkeName, &bar.FylkeSlug,
+			&bar.Kommune, &bar.KommuneName, &bar.KommuneSlug,
+			&bar.Sted, &bar.StedName, &bar.StedSlug,
+			&bar.Flyplass, &bar.Brewery, &bar.Latitude, &bar.Longitude,
+			&bar.CurrentPint, &bar.CurrentPrice,
+			&bar.FromTime, &bar.UntilTime, &bar.HappyChecked,
+		); err != nil {
 			return bars, fmt.Errorf("scanning row: %w", err)
 		}
 		bars = append(bars, bar)
@@ -295,7 +303,7 @@ SELECT
     b.flyplass, b.brewery, b.latitude, b.longitude,
     CASE WHEN b.timed_prices AND hk.pint IS NOT NULL THEN hk.pint ELSE b.pint END AS current_pint,
     CASE WHEN b.timed_prices AND hk.price IS NOT NULL THEN hk.price ELSE b.price END AS current_price,
-    hk.from_time, hk.until_time, hk.price_checked AS hk_checked, hk.id AS hk_id
+    hk.from_time, hk.until_time, hk.price_checked AS hk_checked
 FROM bars b
 LEFT JOIN hk ON b.id = hk.bar
 LEFT JOIN locations l_fylke ON l_fylke.id = b.fylke
