@@ -50,6 +50,7 @@ func main() {
 	})
 
 	r.Route("/liste", func(r chi.Router) {
+		r.Post("/setCustomTime", app.handleCustomTime)
 		r.Route("/{fylke}", func(r chi.Router) {
 			r.Get("/", app.handleListFylke)
 
@@ -132,12 +133,14 @@ func (a *App) handleListFylke(w http.ResponseWriter, r *http.Request) {
 		"fylke": "/" + chi.URLParam(r, "fylke"),
 	}
 	nav, err := utils.SetNavParams(params)
+	navStore := models.Navigation{Level: "fylke", ID: nav.Fylke.ID}
+	stores.SetNavData(sessionStore, sessID, navStore)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
 		return
 	}
-	nextLocations := stores.AppStore.GetLocationsByParent(nav.Fylke.ID, "kommune") // get all kommuner under current fylke
+
 	var bars []models.Bar
 	pref := stores.GetSessionData(sessionStore, sessID)
 	if pref.Preferences.CustomTime {
@@ -148,50 +151,101 @@ func (a *App) handleListFylke(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("unable to get bars: %v", err)
 	}
+	nextLocations := utils.ExtractSortedUniqueKommuner(bars)
 	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
 }
 
 func (a *App) handleListKommune(w http.ResponseWriter, r *http.Request) {
+	sessID := handlers.GetSessionID(r)
 	params := map[string]string{
 		"fylke":   "/" + chi.URLParam(r, "fylke"),
 		"kommune": "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune"),
 	}
 	nav, err := utils.SetNavParams(params)
+	navStore := models.Navigation{Level: "kommune", ID: nav.Kommune.ID}
+	stores.SetNavData(sessionStore, sessID, navStore)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
 		return
 	}
 
-	nextLocations := stores.AppStore.GetLocationsByParent(nav.Kommune.ID, "sted") //get all steder under current kommune
-
-	bars, err := database.GetBarsByLocation(a.DB, nav.Kommune.ID, "sted") //bytt til kommune ved migrering
+	var bars []models.Bar
+	pref := stores.GetSessionData(sessionStore, sessID)
+	if pref.Preferences.CustomTime {
+		bars, err = database.GetBarsByLocationAndTime(a.DB, nav.Kommune.ID, "kommune", pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
+	} else {
+		bars, err = database.GetBarsByLocation(a.DB, nav.Kommune.ID, "kommune")
+	}
 	if err != nil {
 		log.Fatalf("unable to get bars: %v", err)
 	}
-
+	nextLocations := utils.ExtractSortedUniqueSteder(bars)
 	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
 }
 
 func (a *App) handleListSted(w http.ResponseWriter, r *http.Request) {
+	sessID := handlers.GetSessionID(r)
 	params := map[string]string{
 		"fylke":   "/" + chi.URLParam(r, "fylke"),
 		"kommune": "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune"),
 		"sted":    "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune") + "/" + chi.URLParam(r, "sted"),
 	}
 	nav, err := utils.SetNavParams(params)
+	navStore := models.Navigation{Level: "sted", ID: nav.Sted.ID}
+	stores.SetNavData(sessionStore, sessID, navStore)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
 		return
 	}
 
-	nextLocations := stores.AppStore.GetLocationsByParent(nav.Kommune.ID, "sted") //get all steder under current kommune since we go no deeper
-
-	bars, err := database.GetBarsByLocation(a.DB, nav.Sted.ID, "nabolag") //bytt til sted ved migrering
+	var bars []models.Bar
+	pref := stores.GetSessionData(sessionStore, sessID)
+	if pref.Preferences.CustomTime {
+		bars, err = database.GetBarsByLocationAndTime(a.DB, nav.Sted.ID, "sted", pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
+	} else {
+		bars, err = database.GetBarsByLocation(a.DB, nav.Sted.ID, "sted")
+	}
 	if err != nil {
 		log.Fatalf("unable to get bars: %v", err)
 	}
+	nextLocations := utils.ExtractSortedUniqueSteder(bars)
 
 	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
+}
+
+func (a *App) handleCustomTime(w http.ResponseWriter, r *http.Request) {
+	sessID := handlers.GetSessionID(r)
+	if err := r.ParseForm(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
+		return
+	}
+	decoder := form.NewDecoder()
+	fmt.Println(r.PostForm)
+	var userInput models.RawCustomTime
+	decoder.Decode(&userInput, r.PostForm)
+
+	// get closest date from day
+	customDate := stores.GetClosestDate(userInput.Day)
+
+	// parse string to timestamp
+	t, _ := time.Parse("15:04", userInput.Time)
+	pref := models.Preferences{
+		CustomTime: true,
+		Time:       t,
+		Date:       customDate,
+	}
+
+	stores.SetSessionPrefs(sessionStore, sessID, pref)
+
+	sessData := stores.GetSessionData(sessionStore, sessID)
+	fmt.Println(sessData.Navigation.Level)
+
+	bars, err := database.GetBarsByLocationAndTime(a.DB, sessData.Navigation.ID, sessData.Navigation.Level, sessData.Preferences.Date, sessData.Preferences.Time.Format("15:04:05"))
+	if err != nil {
+		log.Fatalf("unable to get bars: %v", err)
+	}
+	templ.Handler(templates.List(bars)).ServeHTTP(w, r)
 }

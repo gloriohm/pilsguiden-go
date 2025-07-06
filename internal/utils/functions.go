@@ -4,6 +4,7 @@ import (
 	"errors"
 	"go-router/internal/stores"
 	"go-router/models"
+	"sort"
 )
 
 func SetNavParams(params map[string]string) (models.UrlNav, error) {
@@ -36,4 +37,58 @@ func SetNavParams(params map[string]string) (models.UrlNav, error) {
 		}
 	}
 	return nav, nil
+}
+
+func ExtractSortedUniqueKommuner(bars []models.Bar) []models.BaseLocation {
+	seen := make(map[int]models.BaseLocation)
+	for _, bar := range bars {
+		if _, exists := seen[bar.Kommune]; !exists {
+			seen[bar.Kommune] = models.BaseLocation{
+				Slug: bar.KommuneSlug,
+				Name: bar.KommuneName,
+			}
+		}
+	}
+
+	// Flatten map to slice
+	var urls []models.BaseLocation
+	for _, url := range seen {
+		urls = append(urls, url)
+	}
+
+	// Sort by Name
+	sort.Slice(urls, func(i, j int) bool {
+		return urls[i].Name < urls[j].Name
+	})
+
+	return urls
+}
+
+func ExtractSortedUniqueSteder(bars []models.Bar) []models.BaseLocation {
+	seen := make(map[int]models.BaseLocation)
+	for _, bar := range bars {
+		if bar.Sted == nil {
+			continue // skip bars without a sted
+		}
+		id := *bar.Sted
+		if _, exists := seen[id]; !exists {
+			seen[id] = models.BaseLocation{
+				Slug: *bar.StedSlug,
+				Name: *bar.StedName,
+			}
+		}
+	}
+
+	// Flatten to slice
+	var urls []models.BaseLocation
+	for _, url := range seen {
+		urls = append(urls, url)
+	}
+
+	// Sort by Name
+	sort.Slice(urls, func(i, j int) bool {
+		return urls[i].Name < urls[j].Name
+	})
+
+	return urls
 }

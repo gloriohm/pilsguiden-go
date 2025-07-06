@@ -7,10 +7,10 @@ import (
 )    
 
 templ List(bars []models.Bar) {
-    <section>
+    <section id="list">
         <ul>
         for _, bar := range bars {
-            <li>{bar.Name}: {strconv.Itoa(int(bar.Pint))},-</li>
+            <li>{bar.Name}: {strconv.Itoa(int(bar.CurrentPint))},-</li>
         }
         </ul>
     </section>

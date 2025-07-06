@@ -2,7 +2,7 @@ package templates
 
 import "go-router/models"
 
-templ LocationLinks(locations []models.Location) {
+templ LocationLinks(locations []models.BaseLocation) {
     <div>
         <ul>
             for _, location := range locations {

@@ -31,6 +31,8 @@ func SessionMiddleware(next http.Handler) http.Handler {
 				SameSite: http.SameSiteLaxMode,
 				MaxAge:   1800, // 30 mins
 			})
+		} else {
+			sessID = cookie.Value
 		}
 
 		ctx := context.WithValue(r.Context(), sessionKey, sessID)
