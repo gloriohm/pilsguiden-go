@@ -31,7 +31,6 @@ func SetNavData(store *cache.Cache, sessionID string, data models.Navigation) {
 
 func SetSessionPrefs(store *cache.Cache, sessionID string, data models.Preferences) {
 	sess := GetSessionData(store, sessionID)
-	fmt.Println(sess)
 	sess.Preferences = data
 	SetSessionData(store, sessionID, sess)
 }

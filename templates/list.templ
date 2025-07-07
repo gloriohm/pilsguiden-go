@@ -1,17 +1,86 @@
 package templates
 
 import (
+    "fmt"
+    "time"
     "strconv"
 
     "go-router/models"
 )    
 
+func formatNorwegianDate(t time.Time) string {
+    norwegianMonths := []string{
+        "januar", "februar", "mars", "april", "mai", "juni",
+        "juli", "august", "september", "oktober", "november", "desember",
+    }
+    currentYear := time.Now().Year()
+    day := t.Day()
+    month := norwegianMonths[int(t.Month())-1]
+
+    if t.Year() != currentYear {
+        return fmt.Sprintf("%d. %s %d", day, month, t.Year())
+    }
+    return fmt.Sprintf("%d. %s", day, month)
+}
+
 templ List(bars []models.Bar) {
     <section id="list">
         <ul>
-        for _, bar := range bars {
-            <li>{bar.Name}: {strconv.Itoa(int(bar.CurrentPint))},-</li>
+        for index, bar := range bars {
+            <li>
+                <span>{bar.Name}</span>
+                <span>{setPrefix(bar)}{strconv.Itoa(int(bar.CurrentPint))},- </span>
+            </li>
+            @card(bar, index)
         }
         </ul>
     </section>
+}
+
+templ card(bar models.Bar, index int) {
+    <div>
+        <p>
+            <span>Pris: </span>
+            <span>{strconv.Itoa(int(bar.CurrentPrice))},- </span>
+            <span>Størrelse: </span>
+            <span>{strconv.FormatFloat(bar.Size, 'f', 1, 64)}l</span></p>
+        <p>
+            <span>Bryggeri: </span>
+            <span id={"bryggeri_" + strconv.Itoa(int(index))}>{bar.Brewery} </span>
+            if bar.Brewery == "" || bar.Brewery == "ukjent" {
+                <span><button>Oppdater bryggeri</button></span>
+            }
+            <span>Pris sjekket: </span>
+            <span id={"checked_" + strconv.Itoa(int(index))}>
+                if bar.HappyChecked != nil {
+                    {formatNorwegianDate(*bar.HappyChecked)}
+                } else {
+                    {formatNorwegianDate(bar.PriceChecked)}
+                }
+            </span>
+        </p>
+        <p>
+            <span>Adresse: </span>
+            <span>{bar.Address}</span>
+        </p>
+        if bar.UntilTime != nil {
+            <p>
+                <span>Pris gyldig til: </span>
+                <span>kl. {bar.UntilTime.Format("15:04")} </span>
+                <span>Vanlig pris: </span>
+                <span>{strconv.Itoa(int(bar.Price))},- for {strconv.FormatFloat(bar.Size, 'f', 1, 64)}l</span>
+            </p>
+        }
+    </div>
+}
+
+func setPrefix(bar models.Bar) string {
+    var prefix string
+    if bar.HappyChecked != nil {
+        prefix += string('⏰')
+    }
+    if bar.CurrentPint != bar.CurrentPrice {
+        prefix += string('*')
+    }
+    return prefix
 }

@@ -49,7 +49,7 @@ type BarManual struct {
 	Flyplass  *int16  `json:"flyplass" form:"flyplass"`
 	Price     int16   `json:"price" form:"price"`
 	Size      float64 `json:"size" form:"size"`
-	Brewery   *string `json:"brewery" form:"brewery"`
+	Brewery   string  `json:"brewery" form:"brewery"`
 	OrgNummer string  `json:"orgnummer" form:"orgnummer"`
 	OsmID     string  `json:"osm_id" form:"osm_id"`
 	LinkedBar bool    `json:"linked_bar" form:"linked_bar"`
