@@ -10,8 +10,8 @@ import (
 
 func formatNorwegianDate(t time.Time) string {
     norwegianMonths := []string{
-        "januar", "februar", "mars", "april", "mai", "juni",
-        "juli", "august", "september", "oktober", "november", "desember",
+        "jan.", "feb.", "mars", "april", "mai", "juni",
+        "juli", "aug.", "sep.", "okt.", "nov.", "des.",
     }
     currentYear := time.Now().Year()
     day := t.Day()
@@ -43,12 +43,20 @@ templ card(bar models.Bar, index int) {
             <span>Pris: </span>
             <span>{strconv.Itoa(int(bar.CurrentPrice))},- </span>
             <span>Størrelse: </span>
-            <span>{strconv.FormatFloat(bar.Size, 'f', 1, 64)}l</span></p>
+            <span>{strconv.FormatFloat(bar.Size, 'f', 1, 64)}l</span>
+        </p>
         <p>
             <span>Bryggeri: </span>
             <span id={"bryggeri_" + strconv.Itoa(int(index))}>{bar.Brewery} </span>
             if bar.Brewery == "" || bar.Brewery == "ukjent" {
-                <span><button>Oppdater bryggeri</button></span>
+                <span x-data="{ open: false }">
+                    <button @click="open: true">Oppdater bryggeri</button>
+                    <div x-show="open">
+                        <span>Bryggeri...</span>
+                        <button hx-post="/update-brewery" hx-trigger="click">Oppdater</button>
+                        <button>Avbryt</button>
+                    </div>
+                </span>
             }
             <span>Pris sjekket: </span>
             <span id={"checked_" + strconv.Itoa(int(index))}>
