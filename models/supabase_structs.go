@@ -19,12 +19,16 @@ type BarRelativeData struct {
 	HappyChecked *time.Time `json:"hk_checked"`
 }
 
-type BarExpandedLocation struct {
+type BarLocationNames struct {
 	FylkeName   string
-	FylkeSlug   string
 	KommuneName string
-	KommuneSlug string
 	StedName    *string
+}
+
+type BarExpandedLocation struct {
+	BarLocationNames
+	FylkeSlug   string
+	KommuneSlug string
 	StedSlug    *string
 }
 

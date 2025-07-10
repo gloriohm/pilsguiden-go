@@ -25,15 +25,19 @@ func formatNorwegianDate(t time.Time) string {
 
 templ List(bars []models.Bar) {
     <section id="list">
-        <ul>
+        <div>
         for index, bar := range bars {
-            <li>
+        <div x-data="{ open: false }" @click.outside="open = false">
+            <div @click="open = ! open">
                 <span>{bar.Name}</span>
                 <span>{setPrefix(bar)}{strconv.Itoa(int(bar.CurrentPint))},- </span>
-            </li>
-            @card(bar, index)
+                <div x-show="open">
+                    @card(bar, index)
+                </div>
+            </div>
+        </div>
         }
-        </ul>
+        </div>
     </section>
 }
 
@@ -45,18 +49,18 @@ templ card(bar models.Bar, index int) {
             <span>Størrelse: </span>
             <span>{strconv.FormatFloat(bar.Size, 'f', 1, 64)}l</span>
         </p>
-        <p>
+        <p x-data="{ checked: }">
             <span>Bryggeri: </span>
             <span id={"bryggeri_" + strconv.Itoa(int(index))}>{bar.Brewery} </span>
-            if bar.Brewery == "" || bar.Brewery == "ukjent" {
-                <span x-data="{ open: false }">
-                    <button @click="open: true">Oppdater bryggeri</button>
+            if bar.Brewery == "" || bar.Brewery == "Ukjent" {
+                <div x-data="{ open: false }">
+                    <button @click="open = true">Oppdater bryggeri</button>
                     <div x-show="open">
                         <span>Bryggeri...</span>
                         <button hx-post="/update-brewery" hx-trigger="click">Oppdater</button>
-                        <button>Avbryt</button>
+                        <button @click="open = false">Avbryt</button>
                     </div>
-                </span>
+                </div>
             }
             <span>Pris sjekket: </span>
             <span id={"checked_" + strconv.Itoa(int(index))}>

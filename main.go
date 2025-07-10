@@ -124,7 +124,7 @@ func handleCreateBar(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to create bar preview", http.StatusInternalServerError)
 		return
 	}
-	templ.Handler(templates.BarPreview(preview)).ServeHTTP(w, r)
+	templ.Handler(templates.CreateBarResult(preview)).ServeHTTP(w, r)
 }
 
 func (a *App) handleListFylke(w http.ResponseWriter, r *http.Request) {
