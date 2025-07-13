@@ -12,30 +12,33 @@ import (
 )
 
 // Returns raw response from OSM and the address parts used for upserting locations
-func FetchBarByNode(osmNode string) (*models.NodeDetails, *models.AddressParts, error) {
+func FetchBarByNode(osmNode string) (models.NodeDetails, models.AddressParts, error) {
+	var node models.NodeDetails
+	var addr models.AddressParts
+
 	url := fmt.Sprintf("https://nominatim.openstreetmap.org/lookup?osm_ids=%s&format=json&extratags=1", osmNode)
 	fmt.Println(url)
 	resp, err := apiResponse(url)
 	fmt.Println(resp)
 	if err != nil {
-		return nil, nil, err
+		return node, addr, err
 	}
 	defer resp.Body.Close()
 
 	var data []models.NodeDetails
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, nil, fmt.Errorf("failed to decode response: %w", err)
+		return node, addr, fmt.Errorf("failed to decode response: %w", err)
 	}
 	if len(data) == 0 {
-		return nil, nil, errors.New("no node data found")
+		return node, addr, errors.New("no node data found")
 	}
 
-	details := data[0]
-	address, err := getAddressParts(&details)
+	node = data[0]
+	addr, err = getAddressParts(&node)
 	if err != nil {
-		return nil, nil, err
+		return node, addr, err
 	}
-	return &details, address, nil
+	return node, addr, nil
 }
 
 func apiResponse(url string) (*http.Response, error) {
@@ -57,7 +60,7 @@ func splitStringByComma(data string) []string {
 	return parts
 }
 
-func getAddressParts(osmNodeDetails *models.NodeDetails) (*models.AddressParts, error) {
+func getAddressParts(osmNodeDetails *models.NodeDetails) (models.AddressParts, error) {
 	parts := splitStringByComma(osmNodeDetails.DisplayName)
 
 	// Accounts for places without postcode
@@ -69,7 +72,7 @@ func getAddressParts(osmNodeDetails *models.NodeDetails) (*models.AddressParts, 
 	// Exits early if there are two few parts in the display name
 	length := len(parts)
 	if length < (5 - indexModifier) {
-		return nil, errors.New("not enough address parts in display_name")
+		return models.AddressParts{}, errors.New("not enough address parts in display_name")
 	}
 
 	// Algoritm to assign strings to keys. Typical format of diplay_name:
@@ -83,10 +86,10 @@ func getAddressParts(osmNodeDetails *models.NodeDetails) (*models.AddressParts, 
 
 	err := addressQualityControl(&modAddress, osmNodeDetails.Address)
 	if err != nil {
-		return nil, err
+		return models.AddressParts{}, err
 	}
 
-	return &modAddress, nil
+	return modAddress, nil
 }
 
 func addressQualityControl(modAddress *models.AddressParts, controlAddress models.Address) error {

@@ -4,10 +4,21 @@ import "go-router/models"
 
 templ CreateBarResult(fetched models.AddressParts) {
     <div class="p-4 bg-green-100 border rounded">
-        <p>Fylke: {fetched.Fylke}</p>
-        <p>Kommune/Bydel: {fetched.Kommune}</p>
-        if fetched.Sted != "" {
-        <p>Sted: {fetched.Sted}</p>
-        }
+        <div>
+            <h3>Ser dette greit ut?</h3>
+            <p>Fylke: {fetched.Fylke}</p>
+            <p>Kommune/Bydel: {fetched.Kommune}</p>
+            if fetched.Sted != "" {
+                <p>Sted: {fetched.Sted}</p>
+            }
+        </div>
+        <button hx-post="/admin/finalize-create-bar" 
+            hx-target="#result" 
+            hx-swap="innerHTML"
+            method="POST">Godkjenn</button>
+        <button hx-post="/utils/empty-div" 
+            hx-target="#result" 
+            hx-swap="innerHTML"
+            method="POST">Avbryt</button>
     </div>
 }

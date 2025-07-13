@@ -47,6 +47,7 @@ func main() {
 			templates.Layout("Create Bar", templates.BarManualForm()).Render(r.Context(), w)
 		})
 		r.Post("/fetch-osm", handleCreateBar)
+		r.Post("/finalize-create-bar", app.handleFinalizeCreateBar)
 	})
 
 	r.Route("/liste", func(r chi.Router) {
@@ -108,6 +109,7 @@ func (a *App) handleBar(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleCreateBar(w http.ResponseWriter, r *http.Request) {
+	sessID := handlers.GetSessionID(r)
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad form", http.StatusBadRequest)
 		return
@@ -118,13 +120,18 @@ func handleCreateBar(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&userInput, r.PostForm)
 	fmt.Println(r.PostForm)
 
-	preview, err := database.InitiateCreateBar(&userInput)
+	preview, err := database.InitiateCreateBar(sessID, &userInput)
 	if err != nil {
 		fmt.Println("Error generating preview:", err)
 		http.Error(w, "Unable to create bar preview", http.StatusInternalServerError)
 		return
 	}
 	templ.Handler(templates.CreateBarResult(preview)).ServeHTTP(w, r)
+}
+
+func (a *App) handleFinalizeCreateBar(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprint(w, `<div class="p-4 bg-green-100 text-green-800 rounded">Bar created successfully!</div>`)
 }
 
 func (a *App) handleListFylke(w http.ResponseWriter, r *http.Request) {

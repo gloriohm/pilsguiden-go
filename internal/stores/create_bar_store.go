@@ -2,48 +2,51 @@ package stores
 
 import (
 	"go-router/models"
-	"sync"
+	"time"
+
+	"github.com/patrickmn/go-cache"
 )
 
-type CreateBarStore struct {
-	mu          sync.RWMutex
-	bar         *models.Bar
-	address     *models.AddressParts
-	barMetadata *models.BarMetadata
+var c = cache.New(5*time.Minute, 10*time.Minute)
+
+func SetBarStore(sessID string, data models.BarManual) {
+	c.Set(sessID, data, cache.DefaultExpiration)
 }
 
-func (s *CreateBarStore) SetBar(bar *models.Bar) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.bar = bar
+func GetBarStore(sessionID string) models.BarManual {
+	if sess, found := c.Get(sessionID); found {
+		if data, ok := sess.(models.BarManual); ok {
+			return data
+		}
+	}
+
+	return models.BarManual{}
 }
 
-func (s *CreateBarStore) GetBar() *models.Bar {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.bar
+func SetAddressStore(sessID string, data models.AddressParts) {
+	c.Set(sessID, data, cache.DefaultExpiration)
 }
 
-func (s *CreateBarStore) SetAddress(addr *models.AddressParts) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.address = addr
+func GetAddressStore(sessionID string) models.AddressParts {
+	if sess, found := c.Get(sessionID); found {
+		if data, ok := sess.(models.AddressParts); ok {
+			return data
+		}
+	}
+
+	return models.AddressParts{}
 }
 
-func (s *CreateBarStore) GetAddress() *models.AddressParts {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.address
+func SetMetaStore(sessID string, data models.BarMetadata) {
+	c.Set(sessID, data, cache.DefaultExpiration)
 }
 
-func (s *CreateBarStore) SetMetadata(meta *models.BarMetadata) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.barMetadata = meta
-}
+func GetMetaStore(sessionID string) models.BarMetadata {
+	if sess, found := c.Get(sessionID); found {
+		if data, ok := sess.(models.BarMetadata); ok {
+			return data
+		}
+	}
 
-func (s *CreateBarStore) GetMetadata() *models.BarMetadata {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.barMetadata
+	return models.BarMetadata{}
 }
