@@ -34,6 +34,8 @@ type AddressParts struct {
 	Kommune  string
 	Fylke    string
 	Postcode string
+	Lat      float64
+	Lon      float64
 }
 
 type BarData struct {

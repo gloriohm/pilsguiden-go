@@ -50,8 +50,8 @@ type BarMetadata struct {
 type BarManual struct {
 	Name      string  `json:"name" form:"name"`
 	Address   string  `json:"address" form:"address"`
-	Flyplass  *int16  `json:"flyplass" form:"flyplass"`
-	Price     int16   `json:"price" form:"price"`
+	Flyplass  *int    `json:"flyplass" form:"flyplass"`
+	Price     int     `json:"price" form:"price"`
 	Size      float64 `json:"size" form:"size"`
 	Brewery   string  `json:"brewery" form:"brewery"`
 	OrgNummer string  `json:"orgnummer" form:"orgnummer"`
@@ -60,7 +60,7 @@ type BarManual struct {
 }
 
 type BarAutoFormat struct {
-	Pint         int16     `json:"pint"`
+	Pint         int       `json:"pint"`
 	Slug         string    `json:"slug"`
 	PriceUpdated time.Time `json:"price_updated"`
 	PriceChecked time.Time `json:"price_checked"`

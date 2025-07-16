@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -34,7 +35,11 @@ func FetchBarByNode(osmNode string) (models.NodeDetails, models.AddressParts, er
 	}
 
 	node = data[0]
-	addr, err = getAddressParts(&node)
+	addr, _ = getAddressParts(&node)
+	lat, _ := strconv.ParseFloat(node.Lat, 64)
+	lon, err := strconv.ParseFloat(node.Lon, 64)
+	addr.Lat = lat
+	addr.Lon = lon
 	if err != nil {
 		return node, addr, err
 	}

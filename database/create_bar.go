@@ -4,23 +4,40 @@ import (
 	"fmt"
 	"go-router/models"
 	"go-router/utils"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func CreateBar(conn *pgx.Conn, userInput *models.BarManual) (bool, error) {
-	bar := models.Bar{Name: userInput.Name}
-	node, addr, err := fetchOSM(userInput.OsmID)
+func CreateBar(conn *pgx.Conn, userInput *models.BarManual) error {
+	bar := models.Bar{
+		BarManual: *userInput,
+	}
+
+	node, addr, err := fetchOSM(bar.OsmID)
 	if err != nil {
-		return false, fmt.Errorf("Error fetching bar from OSM: ", err)
+		return fmt.Errorf("error fetching bar from OSM: %w", err)
 	}
 
 	addrID, err := upsertLocations(conn, addr)
 	if err != nil {
-		return false, fmt.Errorf("Error upserting locations: ", err)
+		return fmt.Errorf("error upserting locations: %w", err)
 	}
 
-	newBar, err := generateBarObject(node)
+	bar.BarOSM = addrID
+	bar.BarAutoFormat = barAuto(bar.Price, bar.Size, bar.Name)
+
+	id, err := CreateNewBar(conn, bar)
+	if err != nil {
+		return fmt.Errorf("error adding bar to Supabase: %w", err)
+	}
+
+	if bar.LinkedBar {
+		extraDetails := ExtractBarMetadata(id, &node)
+		CreateBarMetadata(conn, extraDetails)
+	}
+
+	return nil
 }
 
 func fetchOSM(osmID string) (models.NodeDetails, models.AddressParts, error) {
@@ -33,12 +50,12 @@ func fetchOSM(osmID string) (models.NodeDetails, models.AddressParts, error) {
 	return nodeDetails, address, nil
 }
 
-func upsertLocations(conn *pgx.Conn, adr models.AddressParts) (models.AddrIDs, error) {
-	ids := models.AddrIDs{}
+func upsertLocations(conn *pgx.Conn, adr models.AddressParts) (models.BarOSM, error) {
+	ids := models.BarOSM{Latitude: adr.Lat, Longitude: adr.Lon}
 
 	fylke, err := GetLocationIdByName(conn, adr.Fylke, "fylke")
 	if err != nil {
-		return ids, fmt.Errorf("Fylke not found: ", err)
+		return ids, fmt.Errorf("fylke not found: %w", err)
 	}
 
 	ids.Fylke = fylke
@@ -47,6 +64,9 @@ func upsertLocations(conn *pgx.Conn, adr models.AddressParts) (models.AddrIDs, e
 	if err != nil {
 		newKommune := models.Location{Name: adr.Kommune, Hierarchy: "kommune", Slug: utils.ToURL(adr.Kommune), Parent: &fylke}
 		kommune, err = CreateNewLocation(conn, newKommune)
+		if err != nil {
+			return ids, fmt.Errorf("could not create kommune: %w", err)
+		}
 	}
 
 	ids.Kommune = kommune
@@ -56,10 +76,24 @@ func upsertLocations(conn *pgx.Conn, adr models.AddressParts) (models.AddrIDs, e
 		if err != nil {
 			newSted := models.Location{Name: adr.Sted, Hierarchy: "sted", Slug: utils.ToURL(adr.Sted), Parent: &kommune}
 			sted, err = CreateNewLocation(conn, newSted)
+			if err != nil {
+				return ids, fmt.Errorf("could not create sted: %w", err)
+			}
 		}
 
-		ids.Sted = sted
+		ids.Sted = &sted
 	}
 
 	return ids, nil
+}
+
+func barAuto(price int, size float64, name string) models.BarAutoFormat {
+	auto := models.BarAutoFormat{IsActive: true, PriceUpdated: time.Now(), PriceChecked: time.Now()}
+	auto.Slug = utils.ToURL(name)
+	if size == 0.5 {
+		auto.Pint = price
+	} else {
+		auto.Pint = int(float64(price) / size / 2)
+	}
+	return auto
 }

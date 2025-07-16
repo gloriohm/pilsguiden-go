@@ -118,24 +118,15 @@ func (a *App) handleCreateBar(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&userInput, r.PostForm)
 	fmt.Println(r.PostForm)
 
-	ok, err := database.CreateBar(a.DB, &userInput)
-
-	newBar, err := database.GenerateBarObject(node, addrID)
+	err := database.CreateBar(a.DB, &userInput)
 	if err != nil {
-		fmt.Println("Error creating bar object: ", err)
-		http.Error(w, "Unable to create bar", http.StatusInternalServerError)
-		return
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `<div class="p-4 bg-green-100 text-green-800 rounded">Noe gikk galt: %s</div>`, err)
+	} else {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprint(w, `<div class="p-4 bg-green-100 text-green-800 rounded">Bar created successfully!</div>`)
 	}
 
-	if userInput.LinkedBar {
-		extraDetails := database.ExtractBarMetadata(&node)
-	}
-
-}
-
-func (a *App) handleFinalizeCreateBar(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprint(w, `<div class="p-4 bg-green-100 text-green-800 rounded">Bar created successfully!</div>`)
 }
 
 func (a *App) handleListFylke(w http.ResponseWriter, r *http.Request) {

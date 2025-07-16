@@ -284,13 +284,13 @@ func GetBreweries(conn *pgx.Conn) ([]models.Brewery, error) {
 func GetLocationIdByName(conn *pgx.Conn, name, level string) (int, error) {
 	validLvl := utils.CheckValidLocationLevel(level)
 	if !validLvl {
-		return 0, errors.New("Not a valid location level")
+		return 0, errors.New("not a valid location level")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	query := `SELECT id FROM locations WHERE name = $1 AND hierarchy = $2`
+	query := `SELECT id FROM locs WHERE name = $1 AND hierarchy = $2`
 
 	row := conn.QueryRow(ctx, query, name, level)
 
@@ -305,7 +305,7 @@ func GetLocationIdByName(conn *pgx.Conn, name, level string) (int, error) {
 func CreateNewLocation(conn *pgx.Conn, loc models.Location) (int, error) {
 	validLvl := utils.CheckValidLocationLevel(loc.Hierarchy)
 	if !validLvl {
-		return 0, errors.New("Not a valid location level")
+		return 0, errors.New("not a valid location level")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -317,10 +317,34 @@ func CreateNewLocation(conn *pgx.Conn, loc models.Location) (int, error) {
 	err := conn.QueryRow(ctx, query, loc.Name, loc.Slug, loc.Hierarchy, loc.Parent).Scan(&id)
 
 	if err != nil {
-		return 0, fmt.Errorf("Could not create location: ", err)
+		return 0, fmt.Errorf("could not create location: %w", err)
 	}
 
 	return id, nil
+}
+
+func CreateNewBar(conn *pgx.Conn, bar models.Bar) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `INSERT INTO bars_duplicate (name, address, flyplass, price, size, brewery, orgnummer, osm_id, linked_bar, pint, slug, price_updated, price_checked, is_active, timed_prices, fylke, kommune, sted, latitude, longitude) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING id`
+
+	var id int
+	err := conn.QueryRow(ctx, query, bar.Name, bar.Address, bar.Flyplass, bar.Price, bar.Size, bar.Brewery, bar.OrgNummer, bar.OsmID, bar.LinkedBar, bar.Pint, bar.Slug, bar.PriceUpdated, bar.PriceChecked, bar.IsActive, bar.TimedPrices, bar.Fylke, bar.Kommune, bar.Sted, bar.Latitude, bar.Longitude).Scan(&id)
+
+	if err != nil {
+		return 0, fmt.Errorf("could not create bar: %w", err)
+	}
+
+	return id, nil
+}
+
+func CreateBarMetadata(conn *pgx.Conn, meta models.BarMetadata) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := `INSERT INTO bars (bar_id, last_osm_sync, cuisine, opening_hours, wheelchair, website, email, phone, facebook, instagram) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+
+	conn.QueryRow(ctx, query, meta.BarID, meta.LastOSMSync, meta.Cuisine, meta.OpeningHours, meta.Wheelchair, meta.Website, meta.Email, meta.Phone, meta.Facebook, meta.Instagram)
 }
 
 const getBarsByTimeQuery = `

@@ -5,9 +5,9 @@ import (
 	"time"
 )
 
-// should only be called if BarManual.linkedBar == true
-func ExtractBarMetadata(nd *models.NodeDetails) models.BarMetadata {
+func ExtractBarMetadata(id int, nd *models.NodeDetails) models.BarMetadata {
 	return models.BarMetadata{
+		BarID:        id,
 		Type:         nd.Type,
 		Cuisine:      nd.ExtraTags.Cuisine,
 		OpeningHours: nd.ExtraTags.OpeningHours,
@@ -17,6 +17,6 @@ func ExtractBarMetadata(nd *models.NodeDetails) models.BarMetadata {
 		Phone:        nd.ExtraTags.Phone,
 		Facebook:     nd.ExtraTags.Facebook,
 		Instagram:    nd.ExtraTags.Instagram,
-		LastOSMSync:  time.Now(), // Set to now or inject a param
+		LastOSMSync:  time.Now(),
 	}
 }
