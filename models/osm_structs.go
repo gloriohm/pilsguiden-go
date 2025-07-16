@@ -45,3 +45,9 @@ type BarData struct {
 	LiveMusic     bool
 	Food          bool
 }
+
+type AddrIDs struct {
+	Fylke   int
+	Kommune int
+	Sted    int
+}

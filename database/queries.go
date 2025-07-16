@@ -2,7 +2,9 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"go-router/internal/utils"
 	"go-router/models"
 	"time"
 
@@ -277,6 +279,48 @@ func GetBreweries(conn *pgx.Conn) ([]models.Brewery, error) {
 	}
 
 	return breweries, nil
+}
+
+func GetLocationIdByName(conn *pgx.Conn, name, level string) (int, error) {
+	validLvl := utils.CheckValidLocationLevel(level)
+	if !validLvl {
+		return 0, errors.New("Not a valid location level")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := `SELECT id FROM locations WHERE name = $1 AND hierarchy = $2`
+
+	row := conn.QueryRow(ctx, query, name, level)
+
+	var loc int
+	if err := row.Scan(&loc); err != nil {
+		return 0, fmt.Errorf("db scan: %w", err)
+	}
+
+	return loc, nil
+}
+
+func CreateNewLocation(conn *pgx.Conn, loc models.Location) (int, error) {
+	validLvl := utils.CheckValidLocationLevel(loc.Hierarchy)
+	if !validLvl {
+		return 0, errors.New("Not a valid location level")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := `INSERT INTO locs (name, slug, hierarchy, parent) VALUES ($1, $2, $3, $4) RETURNING id`
+
+	var id int
+	err := conn.QueryRow(ctx, query, loc.Name, loc.Slug, loc.Hierarchy, loc.Parent).Scan(&id)
+
+	if err != nil {
+		return 0, fmt.Errorf("Could not create location: ", err)
+	}
+
+	return id, nil
 }
 
 const getBarsByTimeQuery = `

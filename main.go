@@ -46,8 +46,7 @@ func main() {
 		r.Get("/create-bar", func(w http.ResponseWriter, r *http.Request) {
 			templates.Layout("Create Bar", templates.BarManualForm()).Render(r.Context(), w)
 		})
-		r.Post("/fetch-osm", handleCreateBar)
-		r.Post("/finalize-create-bar", app.handleFinalizeCreateBar)
+		r.Post("/create-bar", app.handleCreateBar)
 	})
 
 	r.Route("/liste", func(r chi.Router) {
@@ -108,8 +107,7 @@ func (a *App) handleBar(w http.ResponseWriter, r *http.Request) {
 	templates.Layout("Bar", templates.BarPage(bar)).Render(r.Context(), w)
 }
 
-func handleCreateBar(w http.ResponseWriter, r *http.Request) {
-	sessID := handlers.GetSessionID(r)
+func (a *App) handleCreateBar(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad form", http.StatusBadRequest)
 		return
@@ -120,13 +118,19 @@ func handleCreateBar(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&userInput, r.PostForm)
 	fmt.Println(r.PostForm)
 
-	preview, err := database.InitiateCreateBar(sessID, &userInput)
+	ok, err := database.CreateBar(a.DB, &userInput)
+
+	newBar, err := database.GenerateBarObject(node, addrID)
 	if err != nil {
-		fmt.Println("Error generating preview:", err)
-		http.Error(w, "Unable to create bar preview", http.StatusInternalServerError)
+		fmt.Println("Error creating bar object: ", err)
+		http.Error(w, "Unable to create bar", http.StatusInternalServerError)
 		return
 	}
-	templ.Handler(templates.CreateBarResult(preview)).ServeHTTP(w, r)
+
+	if userInput.LinkedBar {
+		extraDetails := database.ExtractBarMetadata(&node)
+	}
+
 }
 
 func (a *App) handleFinalizeCreateBar(w http.ResponseWriter, r *http.Request) {

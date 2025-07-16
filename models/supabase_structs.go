@@ -90,8 +90,10 @@ type BaseLocation struct {
 }
 
 type Location struct {
-	BaseLocation
-	Hierarchy string `json:"hierrachy"`
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Slug      string `json:"slug"`
+	Hierarchy string `json:"hierarchy"`
 	Parent    *int   `json:"parent"`
 }
 
