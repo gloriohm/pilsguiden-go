@@ -27,6 +27,28 @@ func CreateBar(conn *pgx.Conn, userInput *models.BarManual) error {
 	bar.BarOSM = addrID
 	bar.BarAutoFormat = barAuto(bar.Price, bar.Size, bar.Name)
 
+	// make sure organisajson and underenhet exists, create them if not
+	_, err = GetOrgID(conn, "underenheter", bar.OrgNummer)
+	if err != nil {
+		underenhet, err := FetchUnderenhet(bar.OrgNummer)
+		if err != nil {
+			return fmt.Errorf("failed fetching underenhet from brreg: %w", err)
+		}
+		_, err = GetOrgID(conn, "organisasjoner", underenhet.Orgnummer)
+		if err != nil {
+			hovedenhet, err := FetchHovedenhet(underenhet.Parent)
+			if err != nil {
+				return fmt.Errorf("failed fetching hovedenhet from brreg: %w", err)
+			}
+			if err := CreateHovedenhet(conn, hovedenhet); err != nil {
+				return fmt.Errorf("failed creating hovedenhet: %w", err)
+			}
+		}
+		if err := CreateUnderenhet(conn, underenhet); err != nil {
+			return fmt.Errorf("failed creating hovedenhet: %w", err)
+		}
+	}
+
 	id, err := CreateNewBar(conn, bar)
 	if err != nil {
 		return fmt.Errorf("error adding bar to Supabase: %w", err)
