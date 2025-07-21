@@ -395,6 +395,47 @@ func CreateUnderenhet(conn *pgx.Conn, data models.Underenhet) error {
 	return nil
 }
 
+func GetBarMetadata(conn *pgx.Conn, barID int) (models.BarMetadata, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := `SELECT bar_id, last_osm_sync, cuisine, opening_hours, wheelchair, website, email, phone, facebook, instagram FROM bar_metadata WHERE bar_id = $1`
+
+	var meta models.BarMetadata
+	err := conn.QueryRow(ctx, query, barID).Scan(&meta.BarID, &meta.LastOSMSync, &meta.Cuisine, &meta.OpeningHours, &meta.Wheelchair, &meta.Email, &meta.Phone, &meta.Facebook, &meta.Instagram)
+
+	if err != nil {
+		return meta, err
+	}
+	return meta, nil
+}
+
+func GetHappyKeysByBarID(conn *pgx.Conn, barID int) ([]models.HappyKey, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var hkeys []models.HappyKey
+	query := `SELECT id, bar, price, size, pint, from_time, until_time, day, updated_at, price_checked, passes_midnight, end_day FROM breweries`
+
+	rows, err := conn.Query(ctx, query)
+	if err != nil {
+		return hkeys, err
+	}
+
+	for rows.Next() {
+		var hkey models.HappyKey
+		if err := rows.Scan(&hkey.ID, &hkey.BarID, &hkey.Price, &hkey.Size, &hkey.Pint, &hkey.FromTime, &hkey.UntilTime, &hkey.Day, &hkey.PriceUpdated, &hkey.PriceChecked, &hkey.PassesMidnight, &hkey.EndDay); err != nil {
+			return hkeys, fmt.Errorf("scanning row: %w", err)
+		}
+		hkeys = append(hkeys, hkey)
+	}
+
+	if rows.Err() != nil {
+		return hkeys, fmt.Errorf("iterating rows: %w", rows.Err())
+	}
+
+	return hkeys, nil
+}
+
 const getBarsByTimeQuery = `
 WITH vars AS (
     SELECT $1::date AS current_date, $2::time AS current_time

@@ -2,7 +2,7 @@ package templates
 
 import "go-router/models"
 
-templ BarPage(bar *models.Bar) {
+templ BarPage(bar *models.Bar, hkeys []models.HappyKey, extra models.BarMetadata) {
     <section>
         <h1>{bar.Name}</h1>
         <p>Adresse: {bar.Address}</p>

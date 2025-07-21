@@ -101,10 +101,29 @@ func (a *App) handleAbout(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleBar(w http.ResponseWriter, r *http.Request) {
 	barParam := chi.URLParam(r, "slug")
 	bar, err := database.GetBarBySlug(a.DB, barParam)
+
 	if err != nil {
 		fmt.Println("Error fetching bar:", err)
 	}
-	templates.Layout("Bar", templates.BarPage(bar)).Render(r.Context(), w)
+
+	var hkeys []models.HappyKey
+	if bar.TimedPrices {
+		hkeys, err = database.GetHappyKeysByBarID(a.DB, bar.ID)
+
+		if err != nil {
+			fmt.Println("Error fetching happy keys:", err)
+		}
+	}
+
+	var extra models.BarMetadata
+	if bar.LinkedBar {
+		extra, err = database.GetBarMetadata(a.DB, bar.ID)
+		if err != nil {
+			fmt.Println("Error fetching bar metadata:", err)
+		}
+	}
+
+	templates.Layout("Bar", templates.BarPage(bar, hkeys, extra)).Render(r.Context(), w)
 }
 
 func (a *App) handleCreateBar(w http.ResponseWriter, r *http.Request) {
