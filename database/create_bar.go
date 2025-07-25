@@ -2,8 +2,8 @@ package database
 
 import (
 	"fmt"
+	"go-router/internal/utils"
 	"go-router/models"
-	"go-router/utils"
 	"time"
 
 	"github.com/jackc/pgx/v5"

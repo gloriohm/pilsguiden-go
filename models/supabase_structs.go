@@ -123,3 +123,9 @@ type HappyKey struct {
 	PassesMidnight bool      `json:"passes_midnight"`
 	EndDay         int       `json:"end_day"`
 }
+
+type SearchResult struct {
+	Name string
+	Slug string
+	Type string
+}

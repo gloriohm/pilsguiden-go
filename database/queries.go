@@ -436,6 +436,55 @@ func GetHappyKeysByBarID(conn *pgx.Conn, barID int) ([]models.HappyKey, error) {
 	return hkeys, nil
 }
 
+func GetSearchResult(conn *pgx.Conn, keyword string) ([]models.SearchResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var results []models.SearchResult
+	query := `SELECT name, slug, type
+		FROM (
+		SELECT
+			name,
+			slug,
+			'/liste' AS type,
+			position(LOWER($1) IN LOWER(name)) AS rank,
+			LENGTH(name) AS len
+		FROM locs
+		WHERE name ILIKE '%' || $1 || '%'
+
+		UNION ALL
+
+		SELECT
+			bar AS name,
+			slug,
+			'/bar/' AS type,
+			position(LOWER($1) IN LOWER(bar)) AS rank,
+			LENGTH(bar) AS len
+		FROM bars
+		WHERE bar ILIKE '%' || $1 || '%'
+		) AS results
+		ORDER BY rank, len, name
+		LIMIT 20;`
+
+	rows, err := conn.Query(ctx, query, keyword)
+	if err != nil {
+		return results, err
+	}
+
+	for rows.Next() {
+		var r models.SearchResult
+		if err := rows.Scan(&r.Name, &r.Slug, &r.Type); err != nil {
+			return results, fmt.Errorf("scanning row: %w", err)
+		}
+		results = append(results, r)
+	}
+
+	if rows.Err() != nil {
+		return results, fmt.Errorf("iterating rows: %w", rows.Err())
+	}
+
+	return results, nil
+}
+
 const getBarsByTimeQuery = `
 WITH vars AS (
     SELECT $1::date AS current_date, $2::time AS current_time

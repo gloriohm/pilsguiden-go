@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"go-router/database"
@@ -65,6 +66,9 @@ func main() {
 	})
 
 	// r.Get("/kart", app.handleMap)
+
+	// site-wide functionality endpoints
+	r.Get("/search-bar", app.handleSearch)
 
 	http.ListenAndServe(":3000", r)
 }
@@ -244,7 +248,7 @@ func (a *App) handleCustomTime(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	decoder := form.NewDecoder()
-	fmt.Println(r.PostForm)
+
 	var userInput models.RawCustomTime
 	decoder.Decode(&userInput, r.PostForm)
 
@@ -269,4 +273,20 @@ func (a *App) handleCustomTime(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("unable to get bars: %v", err)
 	}
 	templ.Handler(templates.List(bars)).ServeHTTP(w, r)
+}
+
+func (a *App) handleSearch(w http.ResponseWriter, r *http.Request) {
+	searchTerm := r.URL.Query().Get("search")
+	decoded, _ := url.QueryUnescape(searchTerm)
+	if len(decoded) > 2 {
+		result, err := database.GetSearchResult(a.DB, decoded)
+		if err != nil {
+			log.Fatalf("unable to get search result: %v", err)
+		}
+
+		templ.Handler(templates.SearchResult(result)).ServeHTTP(w, r)
+	} else {
+		templ.Handler(templates.SearchResult([]models.SearchResult{})).ServeHTTP(w, r)
+	}
+
 }
