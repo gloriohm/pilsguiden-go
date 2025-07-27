@@ -48,6 +48,9 @@ func main() {
 			templates.Layout("Create Bar", templates.BarManualForm()).Render(r.Context(), w)
 		})
 		r.Post("/create-bar", app.handleCreateBar)
+		r.Get("/update-bar", func(w http.ResponseWriter, r *http.Request) {
+			templates.Layout("Update Bar", templates.UpdateBar()).Render(r.Context(), w)
+		})
 	})
 
 	r.Route("/liste", func(r chi.Router) {
@@ -68,7 +71,9 @@ func main() {
 	// r.Get("/kart", app.handleMap)
 
 	// site-wide functionality endpoints
-	r.Get("/search-bar", app.handleSearch)
+	r.Get("/search", app.handleSearch)
+	r.Get("/search-bar", app.handleSearchBar)
+	r.Get("/fetch-bar", app.handleFetchBar)
 
 	http.ListenAndServe(":3000", r)
 }
@@ -289,4 +294,49 @@ func (a *App) handleSearch(w http.ResponseWriter, r *http.Request) {
 		templ.Handler(templates.SearchResult([]models.SearchResult{})).ServeHTTP(w, r)
 	}
 
+}
+
+func (a *App) handleSearchBar(w http.ResponseWriter, r *http.Request) {
+	searchTerm := r.URL.Query().Get("search")
+	decoded, _ := url.QueryUnescape(searchTerm)
+
+	result, err := database.GetBarSearchResult(a.DB, decoded)
+	if err != nil {
+		log.Fatalf("unable to get search result: %v", err)
+	}
+
+	templ.Handler(templates.BarSearchResult(result)).ServeHTTP(w, r)
+}
+
+func (a *App) handleFetchBar(w http.ResponseWriter, r *http.Request) {
+	barSlug := r.URL.Query().Get("bar_slug")
+	decoded, _ := url.QueryUnescape(barSlug)
+
+	bar, err := database.GetBarBySlug(a.DB, decoded)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
+	}
+
+	var hkeys []models.HappyKey
+	if bar.TimedPrices {
+		hkeys, err = database.GetHappyKeysByBarID(a.DB, bar.ID)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
+		}
+	}
+
+	var extra models.BarMetadata
+	if bar.LinkedBar {
+		extra, err = database.GetBarMetadata(a.DB, bar.ID)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
+		}
+	}
+
+	templ.Handler(templates.BarForm(bar, extra, hkeys)).ServeHTTP(w, r)
 }

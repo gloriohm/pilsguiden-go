@@ -42,15 +42,15 @@ func Layout(title string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script src=\"https://unpkg.com/htmx.org@2.0.4\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script></head><body><header><div class=\"container\" style=\"max-width: 576px\"><nav><a href=\"/\">Pilsguiden</a> <a href=\"/om-oss\">Om oss</a> <a href=\"/kontakt\">Kontakt</a> <a href=\"/donasjon\">Donasjon</a> <a href=\"/media\">Media</a></nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script src=\"https://unpkg.com/htmx.org@2.0.4\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script><script src=\"https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4\"></script></head><body><header><div class=\"max-w-xl\"><nav><a href=\"/\">Pilsguiden</a> <a href=\"/om-oss\">Om oss</a> <a href=\"/kontakt\">Kontakt</a> <a href=\"/donasjon\">Donasjon</a> <a href=\"/media\">Media</a></nav>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = Searchbar().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Search().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></header><main class=\"container\" style=\"max-width: 576px\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></header><main class=\"max-w-xl\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

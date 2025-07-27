@@ -1,0 +1,32 @@
+package templates
+
+import "go-router/models"
+
+templ UpdateBar() {
+    <section>
+        <input type="text" name="search"
+            hx-get="/search-bar"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#bar-search-results"
+            placeholder="Søk på bar">
+        <div id="bar-search-results"></div>
+        <div id="bar-form"></div>
+    </section>
+}
+
+templ BarSearchResult(result []models.SearchResult) {
+    <div>
+        for _, r := range result {
+            <button value={r.Slug} name="bar_slug" hx-get="/fetch-bar" hx-target="#bar-form" hx-swap="outerHTML">{r.Name}</button>
+        }
+    </div>
+}
+
+templ BarForm(bar *models.Bar, meta models.BarMetadata, hk []models.HappyKey) {
+    <div>
+        <h2>{bar.Name}</h2>
+        <form>
+        
+        </form>
+    </div>
+}

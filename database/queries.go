@@ -440,9 +440,10 @@ func GetSearchResult(conn *pgx.Conn, keyword string) ([]models.SearchResult, err
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var results []models.SearchResult
-	query := `SELECT name, slug, type
+	query := `SELECT id, name, slug, type
 		FROM (
 		SELECT
+			id,
 			name,
 			slug,
 			'/liste' AS type,
@@ -454,6 +455,7 @@ func GetSearchResult(conn *pgx.Conn, keyword string) ([]models.SearchResult, err
 		UNION ALL
 
 		SELECT
+			id,
 			bar AS name,
 			slug,
 			'/bar/' AS type,
@@ -472,7 +474,37 @@ func GetSearchResult(conn *pgx.Conn, keyword string) ([]models.SearchResult, err
 
 	for rows.Next() {
 		var r models.SearchResult
-		if err := rows.Scan(&r.Name, &r.Slug, &r.Type); err != nil {
+		if err := rows.Scan(&r.ID, &r.Name, &r.Slug, &r.Type); err != nil {
+			return results, fmt.Errorf("scanning row: %w", err)
+		}
+		results = append(results, r)
+	}
+
+	if rows.Err() != nil {
+		return results, fmt.Errorf("iterating rows: %w", rows.Err())
+	}
+
+	return results, nil
+}
+
+func GetBarSearchResult(conn *pgx.Conn, keyword string) ([]models.SearchResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var results []models.SearchResult
+	query := `SELECT id, bar AS name, slug, 'bar' AS type
+		FROM bars
+		WHERE bar ILIKE '%' || $1 || '%'
+		ORDER BY position(LOWER($1) IN LOWER(bar)), LENGTH(bar), bar
+		LIMIT 20;`
+
+	rows, err := conn.Query(ctx, query, keyword)
+	if err != nil {
+		return results, err
+	}
+
+	for rows.Next() {
+		var r models.SearchResult
+		if err := rows.Scan(&r.ID, &r.Name, &r.Slug, &r.Type); err != nil {
 			return results, fmt.Errorf("scanning row: %w", err)
 		}
 		results = append(results, r)

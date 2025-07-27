@@ -2,10 +2,10 @@ package templates
 
 import "go-router/models"
 
-templ Searchbar() {
+templ Search() {
     <nav>
         <input type="text" name="search"
-            hx-get="/search-bar"
+            hx-get="/search"
             hx-trigger="keyup changed delay:500ms"
             hx-target="#search-results"
             placeholder="Søk på bar eller sted">

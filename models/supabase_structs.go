@@ -125,6 +125,7 @@ type HappyKey struct {
 }
 
 type SearchResult struct {
+	ID   int
 	Name string
 	Slug string
 	Type string
