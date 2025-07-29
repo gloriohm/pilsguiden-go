@@ -19,6 +19,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-playground/form"
 	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
 	"github.com/patrickmn/go-cache"
 )
 
@@ -29,6 +30,10 @@ type App struct {
 var sessionStore = cache.New(30*time.Minute, 10*time.Minute)
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
 	conn, err := database.InitDB()
 	if err != nil {
 		log.Fatal(err)
