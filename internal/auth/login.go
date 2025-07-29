@@ -3,6 +3,8 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -38,12 +40,15 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
-	req.Header.Set("apikey", os.Getenv("SUPABASE_ANON_KEY"))
+	req.Header.Set("apikey", os.Getenv("SUPABASE_PUBLIC_KEY"))
 	req.Header.Set("Content-Type", "application/json")
 
+	fmt.Println(req)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil || resp.StatusCode != 200 {
 		http.Error(w, "Invalid login", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, `<div class="text-red-600">Login mislyktes</div>`)
 		return
 	}
 
@@ -53,6 +58,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to parse response", http.StatusInternalServerError)
 		return
 	}
+
+	log.Printf("Login successful, setting cookies and redirection to /admin")
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
@@ -73,4 +80,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteStrictMode,
 		Expires:  time.Now().Add(168 * time.Hour),
 	})
+
+	w.Header().Set("HX-Redirect", "/admin")
+	w.WriteHeader(http.StatusNoContent)
 }

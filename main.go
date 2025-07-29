@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go-router/database"
+	"go-router/internal/auth"
 	"go-router/internal/handlers"
 	"go-router/internal/stores"
 	"go-router/internal/utils"
@@ -49,14 +50,23 @@ func main() {
 	r.Get("/bar/{slug}", app.handleBar)
 
 	r.Route("/admin", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			templates.AdminLayout(templates.Search()).Render(r.Context(), w)
+		})
 		r.Get("/create-bar", func(w http.ResponseWriter, r *http.Request) {
-			templates.Layout("Create Bar", templates.BarManualForm()).Render(r.Context(), w)
+			templates.AdminLayout(templates.BarManualForm()).Render(r.Context(), w)
 		})
 		r.Post("/create-bar", app.handleCreateBar)
 		r.Get("/update-bar", func(w http.ResponseWriter, r *http.Request) {
 			templates.Layout("Update Bar", templates.UpdateBar()).Render(r.Context(), w)
 		})
 	})
+
+	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
+		templates.Layout("Login", templates.Login()).Render(r.Context(), w)
+	})
+
+	r.Post("/auth/login", auth.LoginHandler)
 
 	r.Route("/liste", func(r chi.Router) {
 		r.Post("/setCustomTime", app.handleCustomTime)

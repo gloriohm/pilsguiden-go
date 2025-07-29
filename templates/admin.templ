@@ -1,0 +1,13 @@
+package templates
+
+templ AdminLayout(adminContent templ.Component) {
+    <main>
+        <nav>
+            <a href="/admin/create-bar">Opprett bar</a>
+            <a href="/admin/create-brewery">Opprett bryygeri</a>
+        </nav>
+        <section>
+            @adminContent
+        </section>
+    </main>
+}
