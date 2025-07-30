@@ -35,6 +35,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	conn, err := database.InitDB()
 	if err != nil {
 		log.Fatal(err)
@@ -50,6 +51,7 @@ func main() {
 	r.Get("/bar/{slug}", app.handleBar)
 
 	r.Route("/admin", func(r chi.Router) {
+		r.Use(auth.AuthMiddleware)
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			templates.AdminLayout(templates.Search()).Render(r.Context(), w)
 		})
