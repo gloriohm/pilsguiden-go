@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"go-router/database"
@@ -91,6 +92,12 @@ func main() {
 	r.Get("/search", app.handleSearch)
 	r.Get("/search-bar", app.handleSearchBar)
 	r.Get("/fetch-bar", app.handleFetchBar)
+
+	r.Route("/api", func(r chi.Router) {
+		r.Route("/v1", func(r chi.Router) {
+			r.Post("/update-brewery", app.handleUpdateBrewery)
+		})
+	})
 
 	http.ListenAndServe(":3000", r)
 }
@@ -310,7 +317,6 @@ func (a *App) handleSearch(w http.ResponseWriter, r *http.Request) {
 	} else {
 		templ.Handler(templates.SearchResult([]models.SearchResult{})).ServeHTTP(w, r)
 	}
-
 }
 
 func (a *App) handleSearchBar(w http.ResponseWriter, r *http.Request) {
@@ -334,6 +340,7 @@ func (a *App) handleFetchBar(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
+		return
 	}
 
 	var hkeys []models.HappyKey
@@ -343,6 +350,7 @@ func (a *App) handleFetchBar(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
+			return
 		}
 	}
 
@@ -352,8 +360,33 @@ func (a *App) handleFetchBar(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
+			return
 		}
 	}
 
 	templ.Handler(templates.BarForm(bar, extra, hkeys)).ServeHTTP(w, r)
+}
+
+func (a *App) handleUpdateBrewery(w http.ResponseWriter, r *http.Request) {
+	rawBar := r.URL.Query().Get("bar_id")
+	barID, err := strconv.Atoi(rawBar)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, `<h1>Ugyldig bar ID</h1><p>Bar-ID må være et tall.</p>`)
+		return
+	}
+
+	rawBrew := r.URL.Query().Get("brewery")
+	brewery, _ := url.QueryUnescape(rawBrew)
+
+	err = database.UpdateBreweryWhereUnknown(a.DB, barID, brewery)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, `<h1>Ugyldig bar ID</h1><p>Bar-ID må være et tall.</p>`)
+		return
+	}
+
+	templ.Handler(templates.Modal("Bryggeri oppdatert!")).ServeHTTP(w, r)
 }

@@ -487,6 +487,22 @@ func GetSearchResult(conn *pgx.Conn, keyword string) ([]models.SearchResult, err
 	return results, nil
 }
 
+func UpdateBreweryWhereUnknown(conn *pgx.Conn, bar int, brew string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `UPDATE bars SET brewery = $1 WHERE id = $2 AND (brewery IS NULL OR brewery = 'Ukjent');`
+	cmdTag, err := conn.Exec(ctx, query, brew, bar)
+	if err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("no update performed: brewery was not 'Ukjent' or NULL")
+	}
+
+	return nil
+}
+
 func GetBarSearchResult(conn *pgx.Conn, keyword string) ([]models.SearchResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
