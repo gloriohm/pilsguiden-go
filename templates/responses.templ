@@ -1,0 +1,12 @@
+package templates
+
+templ Toast(msg string) {
+    <div class="toast" remove-me="2s" role="status" aria-live="polite">
+        <p>{msg}</p>
+    </div>
+}
+
+templ UpdateInterface(msg, value string) {
+    @templ.Raw(value)
+    @Toast(msg)
+}

@@ -11,9 +11,12 @@ import (
 )
 
 func (app *app) routes() http.Handler {
+	fileServer := http.FileServer(http.Dir("./static"))
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(handlers.SessionMiddleware)
+	r.Handle("/static/*", http.StripPrefix("/static", fileServer))
 	r.Get("/", app.handleHome)
 	r.Get("/om-oss", app.handleAbout)
 	r.Get("/bar/{slug}", app.handleBar)
@@ -21,14 +24,16 @@ func (app *app) routes() http.Handler {
 	r.Route("/admin", func(r chi.Router) {
 		r.Use(auth.AuthMiddleware)
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			templates.AdminLayout(templates.Search()).Render(r.Context(), w)
+			templates.Layout("Vær hilset, Admin", templates.Search()).Render(r.Context(), w)
 		})
 		r.Get("/create-bar", func(w http.ResponseWriter, r *http.Request) {
-			templates.AdminLayout(templates.BarManualForm()).Render(r.Context(), w)
+			templates.Layout("Opprett bar", templates.BarManualForm()).Render(r.Context(), w)
 		})
-		r.Post("/create-bar", app.handleCreateBar)
 		r.Get("/update-bar", func(w http.ResponseWriter, r *http.Request) {
-			templates.Layout("Update Bar", templates.UpdateBar()).Render(r.Context(), w)
+			templates.Layout("Oppdater Bar", templates.UpdateBar()).Render(r.Context(), w)
+		})
+		r.Get("/create-brewery", func(w http.ResponseWriter, r *http.Request) {
+			templates.Layout("Opprett bryggeri", templates.CreateBrewery()).Render(r.Context(), w)
 		})
 	})
 
@@ -63,6 +68,9 @@ func (app *app) routes() http.Handler {
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/v1", func(r chi.Router) {
 			r.Post("/update-brewery", app.handleUpdateBrewery)
+			r.Post("/create-brewery", app.handleCreateBrewery)
+			r.Post("/create-bar", app.handleCreateBar)
+			r.Post("/confirm-price", app.handleConfirmPrice)
 		})
 	})
 

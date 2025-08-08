@@ -11,7 +11,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/a-h/templ"
@@ -74,28 +73,6 @@ func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templates.Layout("Bar", templates.BarPage(bar, hkeys, extra)).Render(r.Context(), w)
-}
-
-func (a *app) handleCreateBar(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "bad form", http.StatusBadRequest)
-		return
-	}
-
-	decoder := form.NewDecoder()
-	var userInput models.BarManual
-	decoder.Decode(&userInput, r.PostForm)
-	fmt.Println(r.PostForm)
-
-	err := database.CreateBar(a.DB, &userInput)
-	if err != nil {
-		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprintf(w, `<div class="p-4 bg-green-100 text-green-800 rounded">Noe gikk galt: %s</div>`, err)
-	} else {
-		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprint(w, `<div class="p-4 bg-green-100 text-green-800 rounded">Bar created successfully!</div>`)
-	}
-
 }
 
 func (a *app) handleListFylke(w http.ResponseWriter, r *http.Request) {
@@ -282,28 +259,4 @@ func (a *app) handleFetchBar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templ.Handler(templates.BarForm(bar, extra, hkeys)).ServeHTTP(w, r)
-}
-
-func (a *app) handleUpdateBrewery(w http.ResponseWriter, r *http.Request) {
-	rawBar := r.URL.Query().Get("bar_id")
-	barID, err := strconv.Atoi(rawBar)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		fmt.Fprint(w, `<h1>Ugyldig bar ID</h1><p>Bar-ID må være et tall.</p>`)
-		return
-	}
-
-	rawBrew := r.URL.Query().Get("brewery")
-	brewery, _ := url.QueryUnescape(rawBrew)
-
-	err = database.UpdateBreweryWhereUnknown(a.DB, barID, brewery)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		fmt.Fprint(w, `<h1>Ugyldig bar ID</h1><p>Bar-ID må være et tall.</p>`)
-		return
-	}
-
-	// templ.Handler(templates.Modal("Bryggeri oppdatert!")).ServeHTTP(w, r)
 }

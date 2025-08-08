@@ -1,0 +1,18 @@
+package templates
+
+templ CreateBrewery() {
+    <section>
+        <h2>Opprett bryggeri</h2>
+        <form 
+            hx-post="/api/v1/create-brewery"
+            hx-target="#toasts" 
+            hx-swap="beforeend"
+            method="POST"
+        >
+            <label for="new_brew">Navn:</label>
+            <input id="new_brew" name="new_brew" type="text" required>
+            <button type="submit">Opprett</button>
+        </form>
+        <div id="toasts" hx-ext="remove-me"></div>
+    </section>
+}

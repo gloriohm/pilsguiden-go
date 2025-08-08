@@ -1,0 +1,15 @@
+.toast {
+  display: inline-block;
+  padding: .6rem .9rem;
+  border-radius: .5rem;
+  background: #e6ffed;
+  color: #0a5c2b;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  /* fade out to nothing by the time remove-me kicks in */
+  animation: fade-out 1s ease-in forwards;
+}
+
+@keyframes fade-out {
+  /* start visible, end invisible & lifted a bit */
+  to { opacity: 0; transform: translateY(-4px); }
+}

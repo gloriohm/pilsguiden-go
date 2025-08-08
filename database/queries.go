@@ -436,6 +436,43 @@ func GetHappyKeysByBarID(conn *pgx.Conn, barID int) ([]models.HappyKey, error) {
 	return hkeys, nil
 }
 
+func CreateBrewery(conn *pgx.Conn, newBrew string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := `INSERT INTO breweries (name, popular) VALUES ($1, false) RETURNING id`
+
+	var id int
+	err := conn.QueryRow(ctx, query, newBrew).Scan(&id)
+
+	return err
+}
+
+func UpdatePriceChecked(conn *pgx.Conn, table string, newTime time.Time, id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	allowedTables := map[string]bool{
+		"bars":       true,
+		"happy_keys": true,
+	}
+	if !allowedTables[table] {
+		return fmt.Errorf("invalid table name")
+	}
+
+	query := fmt.Sprintf("UPDATE %s SET price_checked = $1 WHERE id = $2", table)
+	cmdTag, err := conn.Exec(ctx, query, newTime, id)
+	if err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("no rows updated for id %d", id)
+	}
+
+	return nil
+}
+
 func GetSearchResult(conn *pgx.Conn, keyword string) ([]models.SearchResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

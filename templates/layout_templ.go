@@ -42,7 +42,7 @@ func Layout(title string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script src=\"https://unpkg.com/htmx.org@2.0.4\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script><script src=\"https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4\"></script></head><body><header><div class=\"max-w-xl\"><nav><a href=\"/\">Pilsguiden</a> <a href=\"/om-oss\">Om oss</a> <a href=\"/kontakt\">Kontakt</a> <a href=\"/donasjon\">Donasjon</a> <a href=\"/media\">Media</a></nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script src=\"https://unpkg.com/htmx.org@2.0.4\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script><script src=\"https://unpkg.com/htmx.org@1.9.12/dist/ext/remove-me.js\"></script><script src=\"https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4\"></script><link rel=\"stylesheet\" href=\"/static/styles.css\"></head><body><header><div class=\"max-w-xl\"><nav><a href=\"/\">Pilsguiden</a> <a href=\"/om-oss\">Om oss</a> <a href=\"/kontakt\">Kontakt</a> <a href=\"/donasjon\">Donasjon</a> <a href=\"/media\">Media</a></nav>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -58,7 +58,7 @@ func Layout(title string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main><footer><hr><p>&copy; 2025 Gloriohm Inc.</p></footer></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main><footer><hr><p>Et Pilz-gruppen konsept</p></footer></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

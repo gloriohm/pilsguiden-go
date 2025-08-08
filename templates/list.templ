@@ -8,7 +8,7 @@ import (
     "go-router/models"
 )    
 
-func formatNorwegianDate(t time.Time) string {
+func FormatNorwegianDate(t time.Time) string {
     norwegianMonths := []string{
         "jan.", "feb.", "mars", "april", "mai", "juni",
         "juli", "aug.", "sep.", "okt.", "nov.", "des.",
@@ -49,27 +49,17 @@ templ card(bar models.Bar, index int) {
             <span>Størrelse: </span>
             <span>{strconv.FormatFloat(bar.Size, 'f', 1, 64)}l</span>
         </p>
-        <p x-data="{ checked: }">
+        <p>
             <span>Bryggeri: </span>
-            <span id={"bryggeri_" + strconv.Itoa(int(index))}>{bar.Brewery} </span>
-            if bar.Brewery == "" || bar.Brewery == "Ukjent" {
-                <div x-data="{ open: false }">
-                    <button @click="open = true">Oppdater bryggeri</button>
-                    <div x-show="open">
-                        <span>Bryggeri...</span>
-                        <button hx-post="/update-brewery" hx-trigger="click">Oppdater</button>
-                        <button @click="open = false">Avbryt</button>
-                    </div>
-                </div>
-            }
+            <span>{bar.Brewery} </span>
             <span>Pris sjekket: </span>
-            <span id={"checked_" + strconv.Itoa(int(index))}>
-                if bar.HappyChecked != nil {
-                    {formatNorwegianDate(*bar.HappyChecked)}
-                } else {
-                    {formatNorwegianDate(bar.PriceChecked)}
-                }
-            </span>
+            if bar.HappyChecked != nil {
+                <span id={"checked_" + strconv.Itoa(int(index))}>{FormatNorwegianDate(*bar.HappyChecked)}</span>
+                <span><button hx-post="/api/v1/confirm-price?type=hkey&id={{bar.hkeyID}}">Bekreft pris</button></span>
+            } else {
+                <span id={"checked_" + strconv.Itoa(int(index))}>{FormatNorwegianDate(bar.PriceChecked)}</span>
+                <span><button hx-post={"/api/v1/confirm-price?type=bar&id=" + strconv.Itoa(int(bar.ID))}>Bekreft pris</button></span>
+            }
         </p>
         <p>
             <span>Adresse: </span>

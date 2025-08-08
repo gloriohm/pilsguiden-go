@@ -177,3 +177,15 @@ func (s *StaticStore) GetLocationsByParent(ID int, level string) []models.Locati
 	}
 	return matches
 }
+
+func (s *StaticStore) BreweryInBreweries(target string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, item := range s.Breweries.Data {
+		if item.Name == target {
+			return true
+		}
+	}
+	return false
+}

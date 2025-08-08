@@ -2,8 +2,8 @@ package templates
 
 templ BarManualForm() {
 	<form 
-		hx-post="/admin/create-bar" 
-		hx-target="#result" 
+		hx-post="/api/v1/create-bar" 
+		hx-target="#toasts" 
 		hx-swap="innerHTML"
 		method="POST"
 		class="space-y-4 max-w-md"
@@ -29,7 +29,8 @@ templ BarManualForm() {
 				<option value="5">Torp</option>
 				<option value="6">Tromsø</option>
 				<option value="7">Trondheim</option>
-				<option value="8">Haudesund</option>
+				<option value="8">Haugesund</option>
+				<option value="9">Molde</option>
 			</select>
 		</div>
 
@@ -40,7 +41,7 @@ templ BarManualForm() {
 
 		<div>
 			<label for="size" class="block">Str.</label>
-			<input type="number" step="0.01" id="size" name="size" required class="w-full border p-2" />
+			<input type="number" step="0.1" id="size" name="size" required class="w-full border p-2" />
 		</div>
 
 		<div>
@@ -63,5 +64,5 @@ templ BarManualForm() {
 		</button>
 	</form>
 
-	<div id="result" class="mt-4"></div>
+	<div id="toasts" class="mt-4"></div>
 }
