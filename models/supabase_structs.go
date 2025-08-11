@@ -17,6 +17,7 @@ type BarRelativeData struct {
 	FromTime     *time.Time `json:"from_time"`
 	UntilTime    *time.Time `json:"until_time"`
 	HappyChecked *time.Time `json:"hk_checked"`
+	HkeyID       int        `json:"hkey_id"`
 }
 
 type BarLocationNames struct {

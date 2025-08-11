@@ -123,3 +123,9 @@ func (a *app) handleConfirmPrice(w http.ResponseWriter, r *http.Request) {
 
 	templ.Handler(templates.UpdateInterface("Pris bekreftet!", timeString)).ServeHTTP(w, r)
 }
+
+func (a *app) handleFetchBars(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+}

@@ -55,10 +55,10 @@ templ card(bar models.Bar, index int) {
             <span>Pris sjekket: </span>
             if bar.HappyChecked != nil {
                 <span id={"checked_" + strconv.Itoa(int(index))}>{FormatNorwegianDate(*bar.HappyChecked)}</span>
-                <span><button hx-post="/api/v1/confirm-price?type=hkey&id={{bar.hkeyID}}">Bekreft pris</button></span>
+                <span><button hx-post={"/api/v1/confirm-price?type=hkey&id=" + strconv.Itoa(int(bar.HkeyID))} hx-target="#toast">Bekreft pris</button></span>
             } else {
                 <span id={"checked_" + strconv.Itoa(int(index))}>{FormatNorwegianDate(bar.PriceChecked)}</span>
-                <span><button hx-post={"/api/v1/confirm-price?type=bar&id=" + strconv.Itoa(int(bar.ID))}>Bekreft pris</button></span>
+                <span><button hx-post={"/api/v1/confirm-price?type=bar&id=" + strconv.Itoa(int(bar.ID))} hx-target="#toast">Bekreft pris</button></span>
             }
         </p>
         <p>

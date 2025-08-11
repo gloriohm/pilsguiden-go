@@ -71,6 +71,7 @@ func (app *app) routes() http.Handler {
 			r.Post("/create-brewery", app.handleCreateBrewery)
 			r.Post("/create-bar", app.handleCreateBar)
 			r.Post("/confirm-price", app.handleConfirmPrice)
+			r.Get("/fetch-bars", app.handleFetchBars)
 		})
 	})
 
