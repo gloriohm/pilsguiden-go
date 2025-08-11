@@ -9,6 +9,7 @@ require github.com/a-h/templ v0.3.906
 require (
 	github.com/MicahParks/keyfunc/v3 v3.4.0
 	github.com/golang-jwt/jwt/v5 v5.2.3
+	github.com/jackc/pgtype v1.14.4
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/joho/godotenv v1.5.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -17,6 +18,7 @@ require (
 
 require (
 	github.com/MicahParks/jwkset v0.8.0 // indirect
+	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	golang.org/x/crypto v0.38.0 // indirect

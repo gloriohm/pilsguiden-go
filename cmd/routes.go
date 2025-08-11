@@ -67,6 +67,7 @@ func (app *app) routes() http.Handler {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/v1", func(r chi.Router) {
+			r.Use(app.APIKeyMiddleware)
 			r.Post("/update-brewery", app.handleUpdateBrewery)
 			r.Post("/create-brewery", app.handleCreateBrewery)
 			r.Post("/create-bar", app.handleCreateBar)

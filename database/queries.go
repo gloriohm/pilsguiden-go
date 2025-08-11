@@ -87,11 +87,28 @@ func GetBarsByLocationAndTime(conn *pgx.Conn, id int, column, date, customTime s
 func GetBarBySlug(conn *pgx.Conn, slug string) (*models.Bar, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	query := `SELECT bar, size, pint, address FROM bars WHERE slug = $1`
+	query := `
+	SELECT 
+		b.id, b.bar, b.price, b.size, b.pint, b.price_checked,
+		b.address, b.fylke, l_fylke.name AS fylke_name, l_fylke.slug AS fylke_slug,
+		b.sted, l_kommune.name AS kommune_name, l_kommune.slug AS kommune_slug,
+		b.nabolag, l_sted.name AS sted_name, l_sted.slug AS sted_slug,
+		b.flyplass, b.brewery, b.latitude, b.longitude, b.timed_prices
+	FROM bars b
+	LEFT JOIN locations l_fylke ON l_fylke.id = b.fylke
+	LEFT JOIN locations l_kommune ON l_kommune.id = b.sted
+	LEFT JOIN locations l_sted ON l_sted.id = b.nabolag
+	WHERE b.is_active IS true
+	AND b.slug = $1
+	LIMIT 1
+	`
 	row := conn.QueryRow(ctx, query, slug)
 
 	var bar models.Bar
-	if err := row.Scan(&bar.Name, &bar.Size, &bar.Pint, &bar.Address); err != nil {
+	if err := row.Scan(&bar.ID, &bar.Name, &bar.Price, &bar.Size, &bar.Pint,
+		&bar.PriceChecked, &bar.Address, &bar.Fylke, &bar.FylkeName, &bar.FylkeSlug,
+		&bar.Kommune, &bar.KommuneName, &bar.KommuneSlug, &bar.Sted, &bar.StedName,
+		&bar.StedSlug, &bar.Flyplass, &bar.Brewery, &bar.Latitude, &bar.Longitude, &bar.TimedPrices); err != nil {
 		return nil, fmt.Errorf("db scan: %w", err)
 	}
 
@@ -414,9 +431,9 @@ func GetHappyKeysByBarID(conn *pgx.Conn, barID int) ([]models.HappyKey, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var hkeys []models.HappyKey
-	query := `SELECT id, bar, price, size, pint, from_time, until_time, day, updated_at, price_checked, passes_midnight, end_day FROM breweries`
+	query := `SELECT id, bar, price, size, pint, from_time, until_time, day, updated_at, price_checked, passes_midnight, end_day FROM happy_keys WHERE bar = $1 ORDER BY day`
 
-	rows, err := conn.Query(ctx, query)
+	rows, err := conn.Query(ctx, query, barID)
 	if err != nil {
 		return hkeys, err
 	}

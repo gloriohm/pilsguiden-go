@@ -1,10 +1,105 @@
 package templates
 
-import "go-router/models"
+import (
+    "fmt"
+	"strings"
+    "strconv"
+
+    "go-router/models"
+	string
+)
+
+var dayNames = []string{
+	"mandag",
+	"tirsdag",
+	"onsdag",
+	"torsdag",
+	"fredag",
+	"lørdag",
+    "søndag",
+}
+
+var bitToMonFirst = []int{6, 0, 1, 2, 3, 4, 5} 
+
+func daysFromBitmask(mask int) string {
+	if mask == 127 { // 0b1111111
+		return "Alle dager"
+	}
+
+	// Extract days present in Monday-first order
+	var days []int
+	for i := 0; i < 7; i++ {
+		bitIndex := (i + 1) % 7 // Monday=1, ..., Sunday=0
+		if mask&(1<<bitIndex) != 0 {
+			days = append(days, i) // store Monday-first index
+		}
+	}
+
+	if len(days) == 0 {
+		return ""
+	}
+
+	if len(days) == 1 {
+		return dayNames[days[0]]
+	}
+
+	// Check for consecutive days (with wrap-around)
+	isConsecutive := true
+	for i := 1; i < len(days); i++ {
+		if days[i] != (days[i-1]+1)%7 {
+			isConsecutive = false
+			break
+		}
+	}
+
+	if isConsecutive {
+		return fmt.Sprintf("%s - %s",
+			dayNames[days[0]],
+			dayNames[days[len(days)-1]],
+		)
+	}
+
+	// Otherwise, list them
+	var names []string
+	for _, d := range days {
+		names = append(names, dayNames[d])
+	}
+	return strings.Join(names, ", ")
+}
 
 templ BarPage(bar *models.Bar, hkeys []models.HappyKey, extra models.BarMetadata) {
     <section>
-        <h1>{bar.Name}</h1>
-        <p>Adresse: {bar.Address}</p>
+        <div>
+            <h1>{bar.Name}</h1>
+            if admin {
+                <a href={"/admin/update-bar/" + bar.ID}>Rediger</a>
+            }
+            <p>{bar.Price},- for {strconv.FormatFloat(bar.Size, 'f', 1, 64)}l</p>
+            if bar.Pint != bar.Price {
+                <p>*Tilsvarer {strconv.Itoa(int(bar.Pint))},- for en halvliter</p>
+            }
+            <p>Bryggeri: {bar.Brewery}</p>
+            if bar.Brewery == "Ukjent" {
+                <button>Legg til bryggeri</button>
+            }
+            if bar.TimedPrices && len(hkeys) > 0 {
+                <h2>Tidsbestemte priser:</h2>
+                <ul>
+                    for _, hkey := range hkeys {
+                        <li>{hkey.Price},- {daysFromBitmask(hkey.Day)}, fra {hkey.FromTime.Format("15:04")} til {hkey.UntilTime.Format("15:04")}</li>
+                    }
+                </ul>
+            }
+        </div>
     </section>
+
+    <div>
+        <p>Velg bryggeri:</p>
+        <select>
+            <option>Velg bryggeri</option>
+        for _, brew := range breweries {
+            <option value={brew.Name}>{brew.Name}</option>
+        }
+        </select>
+    </div>
 }

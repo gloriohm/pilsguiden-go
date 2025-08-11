@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"go-router/database"
 	"go-router/internal/stores"
@@ -128,4 +130,35 @@ func (a *app) handleFetchBars(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
+}
+
+func (app *app) APIKeyMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiKey := r.Header.Get("X-API-Key")
+		if apiKey == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "missing API key"})
+			return
+		}
+
+		var customerKey string
+		var active bool
+		err := app.DB.QueryRow(r.Context(),
+			"SELECT key, active FROM api_keys WHERE key=$1", apiKey,
+		).Scan(&customerKey, &active)
+
+		if err != nil || !active {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "invalid API key"})
+			return
+		}
+
+		type apiKeyContext string
+		const customerIDKey apiKeyContext = "customer_key"
+
+		ctx := context.WithValue(r.Context(), customerIDKey, customerKey)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

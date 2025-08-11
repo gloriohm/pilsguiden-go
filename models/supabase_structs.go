@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/jackc/pgtype"
+)
 
 type Bar struct {
 	ID int `json:"id"`
@@ -111,18 +115,18 @@ type UrlNav struct {
 }
 
 type HappyKey struct {
-	ID             int       `json:"id"`
-	BarID          int       `json:"bar"`
-	Price          int       `json:"price"`
-	Size           float64   `json:"size"`
-	Pint           int       `json:"pint"`
-	FromTime       time.Time `json:"from_time"`
-	UntilTime      time.Time `json:"until_time"`
-	Day            int       `json:"day"`
-	PriceUpdated   time.Time `json:"updated_at"`
-	PriceChecked   time.Time `json:"price_checked"`
-	PassesMidnight bool      `json:"passes_midnight"`
-	EndDay         int       `json:"end_day"`
+	ID             int         `json:"id"`
+	BarID          int         `json:"bar"`
+	Price          int         `json:"price"`
+	Size           float64     `json:"size"`
+	Pint           int         `json:"pint"`
+	FromTime       time.Time   `json:"from_time"`
+	UntilTime      time.Time   `json:"until_time"`
+	Day            int         `json:"day"`
+	PriceUpdated   time.Time   `json:"updated_at"`
+	PriceChecked   time.Time   `json:"price_checked"`
+	PassesMidnight bool        `json:"passes_midnight"`
+	EndDay         pgtype.Int8 `json:"end_day"`
 }
 
 type SearchResult struct {
