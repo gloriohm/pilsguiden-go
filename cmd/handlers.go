@@ -55,6 +55,12 @@ func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error fetching bar:", err)
 	}
 
+	var user models.User
+	c, err := r.Cookie("access_token")
+	if err == nil && c.Value != "" {
+		user.Admin = true
+	}
+
 	var hkeys []models.HappyKey
 	if bar.TimedPrices {
 		hkeys, err = database.GetHappyKeysByBarID(a.DB, bar.ID)
@@ -72,7 +78,9 @@ func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	templates.Layout("Bar", templates.BarPage(bar, hkeys, extra)).Render(r.Context(), w)
+	brews := stores.AppStore.GetBreweriesData()
+
+	templates.Layout("Bar", templates.BarPage(bar, hkeys, extra, brews, &user)).Render(r.Context(), w)
 }
 
 func (a *app) handleListFylke(w http.ResponseWriter, r *http.Request) {
@@ -81,13 +89,15 @@ func (a *app) handleListFylke(w http.ResponseWriter, r *http.Request) {
 		"fylke": "/" + chi.URLParam(r, "fylke"),
 	}
 	nav, err := utils.SetNavParams(params)
-	navStore := models.Navigation{Level: "fylke", ID: nav.Fylke.ID}
-	stores.SetNavData(sessionStore, sessID, navStore)
+
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
 		return
 	}
+
+	navStore := models.Navigation{Level: "fylke", ID: nav.Fylke.ID}
+	stores.SetNavData(sessionStore, sessID, navStore)
 
 	var bars []models.Bar
 	pref := stores.GetSessionData(sessionStore, sessID)
@@ -110,13 +120,15 @@ func (a *app) handleListKommune(w http.ResponseWriter, r *http.Request) {
 		"kommune": "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune"),
 	}
 	nav, err := utils.SetNavParams(params)
-	navStore := models.Navigation{Level: "kommune", ID: nav.Kommune.ID}
-	stores.SetNavData(sessionStore, sessID, navStore)
+
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
 		return
 	}
+
+	navStore := models.Navigation{Level: "kommune", ID: nav.Kommune.ID}
+	stores.SetNavData(sessionStore, sessID, navStore)
 
 	var bars []models.Bar
 	pref := stores.GetSessionData(sessionStore, sessID)

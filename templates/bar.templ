@@ -6,7 +6,6 @@ import (
     "strconv"
 
     "go-router/models"
-	string
 )
 
 var dayNames = []string{
@@ -67,12 +66,12 @@ func daysFromBitmask(mask int) string {
 	return strings.Join(names, ", ")
 }
 
-templ BarPage(bar *models.Bar, hkeys []models.HappyKey, extra models.BarMetadata) {
+templ BarPage(bar *models.Bar, hkeys []models.HappyKey, extra models.BarMetadata, breweries []models.Brewery, user *models.User) {
     <section>
         <div>
             <h1>{bar.Name}</h1>
-            if admin {
-                <a href={"/admin/update-bar/" + bar.ID}>Rediger</a>
+            if user.Admin {
+                <a href={"/admin/update-bar/" + strconv.Itoa(int(bar.ID))}>Rediger</a>
             }
             <p>{bar.Price},- for {strconv.FormatFloat(bar.Size, 'f', 1, 64)}l</p>
             if bar.Pint != bar.Price {

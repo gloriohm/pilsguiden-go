@@ -19,6 +19,7 @@
 *.crt
 *.pem
 *.enc
+.air.toml
 
 # Generated code
 *_templ.go

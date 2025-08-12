@@ -135,3 +135,10 @@ type SearchResult struct {
 	Slug string
 	Type string
 }
+
+type User struct {
+	ID    int
+	Name  string
+	Email string
+	Admin bool
+}
