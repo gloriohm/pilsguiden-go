@@ -100,7 +100,7 @@ func (a *app) handleListFylke(w http.ResponseWriter, r *http.Request) {
 	navStore := models.Navigation{Level: "fylke", ID: nav.Fylke.ID}
 	stores.SetNavData(sessionStore, sessID, navStore)
 
-	var bars []models.Bar
+	var bars []models.BarView
 	pref := stores.GetSessionData(sessionStore, sessID)
 	if pref.Preferences.CustomTime {
 		bars, err = database.GetBarsByLocationAndTime(a.DB, nav.Fylke.ID, "fylke", pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
@@ -112,7 +112,7 @@ func (a *app) handleListFylke(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nextLocations := utils.ExtractSortedUniqueKommuner(bars)
-	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations, params["fylke"]), templates.List(bars))).Render(r.Context(), w)
+	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
 }
 
 func (a *app) handleListKommune(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +132,7 @@ func (a *app) handleListKommune(w http.ResponseWriter, r *http.Request) {
 	navStore := models.Navigation{Level: "kommune", ID: nav.Kommune.ID}
 	stores.SetNavData(sessionStore, sessID, navStore)
 
-	var bars []models.Bar
+	var bars []models.BarView
 	pref := stores.GetSessionData(sessionStore, sessID)
 	if pref.Preferences.CustomTime {
 		bars, err = database.GetBarsByLocationAndTime(a.DB, nav.Kommune.ID, "kommune", pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
@@ -143,7 +143,7 @@ func (a *app) handleListKommune(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("unable to get bars: %v", err)
 	}
 	nextLocations := utils.ExtractSortedUniqueSteder(bars)
-	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations, params["kommune"]), templates.List(bars))).Render(r.Context(), w)
+	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
 }
 
 func (a *app) handleListSted(w http.ResponseWriter, r *http.Request) {
@@ -163,7 +163,7 @@ func (a *app) handleListSted(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var bars []models.Bar
+	var bars []models.BarView
 	pref := stores.GetSessionData(sessionStore, sessID)
 	if pref.Preferences.CustomTime {
 		bars, err = database.GetBarsByLocationAndTime(a.DB, nav.Sted.ID, "sted", pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
@@ -177,7 +177,7 @@ func (a *app) handleListSted(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(params["sted"])
 
-	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations, params["sted"]), templates.List(bars))).Render(r.Context(), w)
+	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
 }
 
 func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {

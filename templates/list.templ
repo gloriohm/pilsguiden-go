@@ -23,7 +23,7 @@ func FormatNorwegianDate(t time.Time) string {
     return fmt.Sprintf("%d. %s", day, month)
 }
 
-templ List(bars []models.Bar) {
+templ List(bars []models.BarView) {
     <section id="list">
         <div class="flex flex-col gap-1">
         for index, bar := range bars {
@@ -63,7 +63,7 @@ templ List(bars []models.Bar) {
     </section>
 }
 
-templ card(bar models.Bar, index int) {
+templ card(bar models.BarView, index int) {
     <div>
         <p>
             <span>Pris: </span>
@@ -75,9 +75,9 @@ templ card(bar models.Bar, index int) {
             <span>Bryggeri: </span>
             <span>{bar.Brewery} </span>
             <span>Pris sjekket: </span>
-            if bar.HappyChecked != nil {
+             if bar.HappyChecked != nil {
                 <span id={"checked_" + strconv.Itoa(int(index))}>{FormatNorwegianDate(*bar.HappyChecked)}</span>
-                <span><button hx-post={"/api/v1/confirm-price?type=hkey&id=" + strconv.Itoa(int(bar.HkeyID))} hx-target="#toast">Bekreft pris</button></span>
+                <span><button hx-post={"/api/v1/confirm-price?type=hkey&id=" + strconv.FormatInt(bar.HkeyID.Int, 10)} hx-target="#toast">Bekreft pris</button></span>
             } else {
                 <span id={"checked_" + strconv.Itoa(int(index))}>{FormatNorwegianDate(bar.PriceChecked)}</span>
                 <span><button hx-post={"/api/v1/confirm-price?type=bar&id=" + strconv.Itoa(int(bar.ID))} hx-target="#toast">Bekreft pris</button></span>
@@ -98,7 +98,7 @@ templ card(bar models.Bar, index int) {
     </div>
 }
 
-func setPrefix(bar models.Bar) string {
+func setPrefix(bar models.BarView) string {
     var prefix string
     if bar.HappyChecked != nil {
         prefix += string('⏰')

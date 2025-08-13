@@ -44,7 +44,7 @@ func SetNavParams(params map[string]string) (models.UrlNav, error) {
 	return nav, nil
 }
 
-func ExtractSortedUniqueKommuner(bars []models.Bar) []models.BaseLocation {
+func ExtractSortedUniqueKommuner(bars []models.BarView) []models.BaseLocation {
 	seen := make(map[int]models.BaseLocation)
 	for _, bar := range bars {
 		if _, exists := seen[bar.Kommune]; !exists {
@@ -69,7 +69,7 @@ func ExtractSortedUniqueKommuner(bars []models.Bar) []models.BaseLocation {
 	return urls
 }
 
-func ExtractSortedUniqueSteder(bars []models.Bar) []models.BaseLocation {
+func ExtractSortedUniqueSteder(bars []models.BarView) []models.BaseLocation {
 	seen := make(map[int]models.BaseLocation)
 	for _, bar := range bars {
 		if bar.Sted == nil {

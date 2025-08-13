@@ -7,7 +7,7 @@ import (
 )
 
 type Bar struct {
-	ID int `json:"id"`
+	ID int `db:"id"`
 	BarManual
 	BarAutoFormat
 	BarOSM
@@ -15,13 +15,29 @@ type Bar struct {
 	BarExpandedLocation
 }
 
+type BarView struct {
+	ID           int         `db:"id"`
+	Name         string      `db:"bar" form:"name"`
+	Address      string      `db:"address"`
+	Price        int         `db:"price"`
+	Size         float64     `db:"size"`
+	Pint         int         `db:"pint"`
+	Brewery      string      `db:"brewery"`
+	Slug         string      `db:"slug"`
+	PriceChecked time.Time   `db:"price_checked"`
+	Flyplass     pgtype.Int8 `db:"flyplass"`
+	BarOSM
+	BarExpandedLocation
+	BarRelativeData
+}
+
 type BarRelativeData struct {
-	CurrentPint  int        `json:"current_pint"`
-	CurrentPrice int        `json:"current_price"`
-	FromTime     *time.Time `json:"from_time"`
-	UntilTime    *time.Time `json:"until_time"`
-	HappyChecked *time.Time `json:"hk_checked"`
-	HkeyID       int        `json:"hkey_id"`
+	CurrentPint  int         `db:"current_pint"`
+	CurrentPrice int         `db:"current_price"`
+	FromTime     *time.Time  `db:"from_time"`
+	UntilTime    *time.Time  `db:"until_time"`
+	HappyChecked *time.Time  `db:"hk_checked"`
+	HkeyID       pgtype.Int8 `db:"hkey_id"`
 }
 
 type BarLocationNames struct {
@@ -38,47 +54,47 @@ type BarExpandedLocation struct {
 }
 
 type BarMetadata struct {
-	BarID        int       `json:"bar_id"`
-	LastOSMSync  time.Time `json:"last_osm_sync"`
-	LinkedBar    bool      `json:"linked_bar"`
-	Type         string    `json:"type"`
-	Cuisine      *string   `json:"cuisine"`
-	OpeningHours *string   `json:"opening_hours"`
-	Wheelchair   *string   `json:"wheelchair"`
-	Website      *string   `json:"website"`
-	Email        *string   `json:"email"`
-	Phone        *string   `json:"phone"`
-	Facebook     *string   `json:"facebook"`
-	Instagram    *string   `json:"instagram"`
+	BarID        int       `db:"bar_id"`
+	LastOSMSync  time.Time `db:"last_osm_sync"`
+	LinkedBar    bool      `db:"linked_bar"`
+	Type         string    `db:"type"`
+	Cuisine      *string   `db:"cuisine"`
+	OpeningHours *string   `db:"opening_hours"`
+	Wheelchair   *string   `db:"wheelchair"`
+	Website      *string   `db:"website"`
+	Email        *string   `db:"email"`
+	Phone        *string   `db:"phone"`
+	Facebook     *string   `db:"facebook"`
+	Instagram    *string   `db:"instagram"`
 }
 
 type BarManual struct {
-	Name      string  `json:"name" form:"name"`
-	Address   string  `json:"address" form:"address"`
-	Flyplass  *int    `json:"flyplass" form:"flyplass"`
-	Price     int     `json:"price" form:"price"`
-	Size      float64 `json:"size" form:"size"`
-	Brewery   string  `json:"brewery" form:"brewery"`
-	OrgNummer string  `json:"orgnummer" form:"orgnummer"`
-	OsmID     string  `json:"osm_id" form:"osm_id"`
-	LinkedBar bool    `json:"linked_bar" form:"linked_bar"`
+	Name      string      `db:"bar" form:"name"`
+	Address   string      `db:"address" form:"address"`
+	Flyplass  pgtype.Int8 `db:"flyplass" form:"flyplass"`
+	Price     int         `db:"price" form:"price"`
+	Size      float64     `db:"size" form:"size"`
+	Brewery   string      `db:"brewery" form:"brewery"`
+	OrgNummer string      `db:"orgnummer" form:"orgnummer"`
+	OsmID     string      `db:"osm_id" form:"osm_id"`
+	LinkedBar bool        `db:"linked_bar" form:"linked_bar"`
 }
 
 type BarAutoFormat struct {
-	Pint         int       `json:"pint"`
-	Slug         string    `json:"slug"`
-	PriceUpdated time.Time `json:"price_updated"`
-	PriceChecked time.Time `json:"price_checked"`
-	IsActive     bool      `json:"is_active"`
-	TimedPrices  bool      `json:"timed_prices"`
+	Pint         int       `db:"pint"`
+	Slug         string    `db:"slug"`
+	PriceUpdated time.Time `db:"price_updated"`
+	PriceChecked time.Time `db:"price_checked"`
+	IsActive     bool      `db:"is_active"`
+	TimedPrices  bool      `db:"timed_prices"`
 }
 
 type BarOSM struct {
-	Fylke     int     `json:"fylke"`
-	Kommune   int     `json:"kommune"`
-	Sted      *int    `json:"sted"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
+	Fylke     int     `db:"fylke"`
+	Kommune   int     `db:"kommune"`
+	Sted      *int    `db:"sted"`
+	Latitude  float64 `db:"latitude"`
+	Longitude float64 `db:"longitude"`
 }
 
 type AboutInfo struct {
@@ -89,21 +105,21 @@ type AboutInfo struct {
 }
 
 type BaseLocation struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-	Slug string `json:"slug"`
+	ID   int    `db:"id"`
+	Name string `db:"name"`
+	Slug string `db:"slug"`
 }
 
 type Location struct {
 	BaseLocation
-	Hierarchy string `json:"hierarchy"`
-	Parent    *int   `json:"parent"`
+	Hierarchy string `db:"hierarchy"`
+	Parent    *int   `db:"parent"`
 }
 
 type Brewery struct {
-	ID      int    `json:"id"`
-	Name    string `json:"name"`
-	Popular bool   `json:"popular"`
+	ID      int    `db:"id"`
+	Name    string `db:"name"`
+	Popular bool   `db:"popular"`
 }
 
 type UrlNav struct {
@@ -113,18 +129,18 @@ type UrlNav struct {
 }
 
 type HappyKey struct {
-	ID             int         `json:"id"`
-	BarID          int         `json:"bar"`
-	Price          int         `json:"price"`
-	Size           float64     `json:"size"`
-	Pint           int         `json:"pint"`
-	FromTime       time.Time   `json:"from_time"`
-	UntilTime      time.Time   `json:"until_time"`
-	Day            int         `json:"day"`
-	PriceUpdated   time.Time   `json:"updated_at"`
-	PriceChecked   time.Time   `json:"price_checked"`
-	PassesMidnight bool        `json:"passes_midnight"`
-	EndDay         pgtype.Int8 `json:"end_day"`
+	ID             int         `db:"id"`
+	BarID          int         `db:"bar"`
+	Price          int         `db:"price"`
+	Size           float64     `db:"size"`
+	Pint           int         `db:"pint"`
+	FromTime       time.Time   `db:"from_time"`
+	UntilTime      time.Time   `db:"until_time"`
+	Day            int         `db:"day"`
+	PriceUpdated   time.Time   `db:"updated_at"`
+	PriceChecked   time.Time   `db:"price_checked"`
+	PassesMidnight bool        `db:"passes_midnight"`
+	EndDay         pgtype.Int8 `db:"end_day"`
 }
 
 type SearchResult struct {

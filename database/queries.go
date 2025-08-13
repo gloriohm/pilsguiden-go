@@ -11,73 +11,46 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func GetBarsByLocation(conn *pgx.Conn, id int, column string) ([]models.Bar, error) {
+func GetBarsByLocation(conn *pgx.Conn, id int, column string) ([]models.BarView, error) {
+	valid := utils.CheckValidLocationLevel(column)
+	if !valid {
+		return nil, fmt.Errorf("unsupported column %q", column)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var bars []models.Bar
 
 	query := fmt.Sprintf(`SELECT * FROM current_bars WHERE %s = $1`, column)
 	rows, err := conn.Query(ctx, query, id)
 	if err != nil {
-		return bars, err
+		return nil, err
 	}
 	defer rows.Close()
+	bars, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.BarView])
 
-	for rows.Next() {
-		var bar models.Bar
-		if err := rows.Scan(
-			&bar.ID, &bar.Name, &bar.Price, &bar.Size, &bar.Pint, &bar.PriceChecked,
-			&bar.Address, &bar.Fylke, &bar.FylkeName, &bar.FylkeSlug,
-			&bar.Kommune, &bar.KommuneName, &bar.KommuneSlug,
-			&bar.Sted, &bar.StedName, &bar.StedSlug,
-			&bar.Flyplass, &bar.Brewery, &bar.Latitude, &bar.Longitude,
-			&bar.CurrentPint, &bar.CurrentPrice,
-			&bar.FromTime, &bar.UntilTime, &bar.HappyChecked,
-		); err != nil {
-			return bars, fmt.Errorf("scanning row: %w", err)
-		}
-		bars = append(bars, bar)
-	}
-
-	if rows.Err() != nil {
-		return bars, fmt.Errorf("iterating rows: %w", rows.Err())
+	if err != nil {
+		return bars, fmt.Errorf("iterating rows: %w", err)
 	}
 
 	return bars, nil
 }
 
-func GetBarsByLocationAndTime(conn *pgx.Conn, id int, column, date, customTime string) ([]models.Bar, error) {
+func GetBarsByLocationAndTime(conn *pgx.Conn, id int, column, date, customTime string) ([]models.BarView, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var bars []models.Bar
 
-	// Be very cautious: don't format raw input into SQL without validation
 	query := getBarsByTimeQuery
 
 	rows, err := conn.Query(ctx, query, date, customTime, id, column)
 	if err != nil {
-		return bars, err
+		return nil, err
 	}
 	defer rows.Close()
 
-	for rows.Next() {
-		var bar models.Bar
-		if err := rows.Scan(
-			&bar.ID, &bar.Name, &bar.Price, &bar.Size, &bar.Pint, &bar.PriceChecked,
-			&bar.Address, &bar.Fylke, &bar.FylkeName, &bar.FylkeSlug,
-			&bar.Kommune, &bar.KommuneName, &bar.KommuneSlug,
-			&bar.Sted, &bar.StedName, &bar.StedSlug,
-			&bar.Flyplass, &bar.Brewery, &bar.Latitude, &bar.Longitude,
-			&bar.CurrentPint, &bar.CurrentPrice,
-			&bar.FromTime, &bar.UntilTime, &bar.HappyChecked,
-		); err != nil {
-			return bars, fmt.Errorf("scanning row: %w", err)
-		}
-		bars = append(bars, bar)
-	}
+	bars, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.BarView])
 
-	if rows.Err() != nil {
-		return bars, fmt.Errorf("iterating rows: %w", rows.Err())
+	if err != nil {
+		return bars, fmt.Errorf("iterating rows: %w", err)
 	}
 
 	return bars, nil
@@ -220,53 +193,41 @@ func GetTotalBars(conn *pgx.Conn) (int, error) {
 	return total, nil
 }
 
-func GetTopTen(conn *pgx.Conn) ([]models.Bar, error) {
+func GetTopTen(conn *pgx.Conn) ([]models.BarView, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var bars []models.Bar
-	query := `SELECT bar, size, current_pint FROM current_bars ORDER BY current_pint ASC LIMIT 10`
 
+	query := `SELECT * FROM current_bars ORDER BY current_pint ASC LIMIT 10`
 	rows, err := conn.Query(ctx, query)
 	if err != nil {
-		return bars, err
+		return nil, err
 	}
 
-	for rows.Next() {
-		var bar models.Bar
-		if err := rows.Scan(&bar.Name, &bar.Size, &bar.CurrentPint); err != nil {
-			return bars, fmt.Errorf("scanning row: %w", err)
-		}
-		bars = append(bars, bar)
-	}
+	defer rows.Close()
+	bars, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.BarView])
 
-	if rows.Err() != nil {
-		return bars, fmt.Errorf("iterating rows: %w", rows.Err())
+	if err != nil {
+		return bars, fmt.Errorf("iterating rows: %w", err)
 	}
 
 	return bars, nil
 }
 
-func GetBottomTen(conn *pgx.Conn) ([]models.Bar, error) {
+func GetBottomTen(conn *pgx.Conn) ([]models.BarView, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	var bars []models.Bar
-	query := `SELECT bar, size, current_pint FROM current_bars ORDER BY current_pint DESC LIMIT 10`
 
+	query := `SELECT * FROM current_bars ORDER BY current_pint DESC LIMIT 10`
 	rows, err := conn.Query(ctx, query)
 	if err != nil {
-		return bars, err
+		return nil, err
 	}
 
-	for rows.Next() {
-		var bar models.Bar
-		if err := rows.Scan(&bar.Name, &bar.Size, &bar.CurrentPint); err != nil {
-			return bars, fmt.Errorf("scanning row: %w", err)
-		}
-		bars = append(bars, bar)
-	}
+	defer rows.Close()
+	bars, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.BarView])
 
-	if rows.Err() != nil {
-		return bars, fmt.Errorf("iterating rows: %w", rows.Err())
+	if err != nil {
+		return bars, fmt.Errorf("iterating rows: %w", err)
 	}
 
 	return bars, nil
