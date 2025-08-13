@@ -20,7 +20,7 @@ func GetSessionData(store *cache.Cache, sessionID string) models.SessionData {
 
 func SetSessionData(store *cache.Cache, sessionID string, data models.SessionData) {
 	store.Set(sessionID, data, cache.DefaultExpiration)
-	fmt.Printf("session stored with id %s and data %v", sessionID, data)
+	fmt.Printf("session stored with id %s and data %v \n", sessionID, data)
 }
 
 func SetNavData(store *cache.Cache, sessionID string, data models.Navigation) {

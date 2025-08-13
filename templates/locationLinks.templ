@@ -4,10 +4,10 @@ import "go-router/models"
 
 templ LocationLinks(locations []models.BaseLocation) {
     <div>
-        <ul>
+        <nav class="flex gap-2 font-semibold flex-wrap">
             for _, location := range locations {
-            <li><a href={templ.SafeURL("/liste" + location.Slug)}>{location.Name}</a></li>
+            <a href={templ.SafeURL("/liste" + location.Slug)} class="hover:bg-violet-300 active:bg-violet-400 bg-amber-200 dark:bg-zinc-950 rounded-md p-1">{location.Name}</a>
         }
-        </ul>
+        </nav>
     </div>
 }

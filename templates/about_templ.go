@@ -31,27 +31,27 @@ func About(about *models.AboutInfo) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section><h1>About Us</h1><p>We pour beer and build Go web apps.</p><p>Pilsguiden ble etablert i september 2023 med et mål om å være den mest komplette og oppdaterte siden for ølpriser i Norge. Akkurat nå er det ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<article class=\"m-auto max-w-xl\"><section><h2 class=\"text-3xl font-extrabold pb-4\">Om Pilsguiden</h2><div class=\"flex flex-col gap-1\"><p class=\"max-w-prose\">Pilsguiden ble etablert i september 2023 med et mål om å være den mest komplette og oppdaterte siden for ølpriser i Norge. Akkurat nå er det ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(about.Total)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/about.templ`, Line: 11, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/about.templ`, Line: 12, Col: 94}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " serveringssteder på siden fordelt over alle fylkene med Svalbard.</p><p>Ølprisen kan variere voldsomt i Norge. Blant serveringsstedene på siden, koster den billigste ølen ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " serveringssteder på siden fordelt over alle fylkene med Svalbard. </p><p class=\"max-w-prose\">Ølprisen kan variere voldsomt i Norge. Blant serveringsstedene på siden, koster den billigste ølen ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(about.MinPrice)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/about.templ`, Line: 13, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/about.templ`, Line: 17, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -64,7 +64,7 @@ func About(about *models.AboutInfo) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(about.MaxPrice)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/about.templ`, Line: 13, Col: 84}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/about.templ`, Line: 18, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -77,13 +77,26 @@ func About(about *models.AboutInfo) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(about.Diff)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/about.templ`, Line: 14, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/about.templ`, Line: 18, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "kr.* Pilsguiden ble til for å lose deg i retning et serveringssted som passer din økonomi og for å skape litt forutsigbarhet når du ber om en pils.</p><p>* Alle oppgitte priser er NOK per halvliter øl.</p></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "kr.*  Pilsguiden ble til for å lose deg i retning et serveringssted som passer din økonomi og for å skape litt forutsigbarhet når du ber om en pils.</p><p class=\"max-w-prose\">* Alle oppgitte priser er NOK per halvliter øl.</p></div></section><section><h3 class=\"text-xl font-bold my-2\">Slik samler vi inn priser</h3><div class=\"max-w-prose flex flex-col gap-2\"><p>Ølprisene på Pilsguiden.no hentes inn ved nettdugnad. Brukere over hele landet kan kontakte oss på <a href=\"mailto:pilsguiden@hotmail.com\" class=\"underline\">pilsguiden@hotmail.com</a> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var6 string
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("for")
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/about.templ`, Line: 33, Col: 26}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " å melde inn priser. Da trenger vi navnet på serveringsstedet, prisen på et glass øl og størrelsen på glasset. Prisen blir automatisk konvertert til halvliter-pris når vi legger det inn i systemet. Vi vil helst at du også inkluderer hvilket bryggeri baren fører, da det er mulig å filtrere listene våre slik at man kan finne steder som fører sitt favorittbryggeri.</p><p>Skal du sende tidsbestemte priser, også kalt «happy hour» på folkemunne, er det viktig at vi får tidene og dagene det gjelder, samt prisen på ølen ellers. Listene oppdaterer seg i sanntid, så prisene som vises i lista er prisene som gjelder akkurat nå. Ser du en klokke ⏰ i lista kan du trykke på det aktuelle serveringsstedet og se hvor lenge prisen gjelder. </p><p>Finner du en pris i lista som fortsatt er riktig? Da hjelper du alle ved å bruke «bekreft pris»-funksjonen. Da oppdateres datoen og datakvaliteten blir bedre. </p><p>I tillegg til prisene som blir sendt inn, gjør vi også en jobb med å sjekke menyer og bestillingsløsninger som finnes på nett, og henter priser derfra om vi ser på datakvaliteten som pålitelig. Men aller helst ønsker vi oss innsendte priser. </p></div></section><section><h3 class=\"text-xl font-bold my-2\">Disse prisene finner du på Pilsguiden</h3><div class=\"flex flex-col gap-2\"><p class=\"max-w-prose\">For at lista skal fungere best mulig, har vi valgt å sette opp noen krav til prisene vi samler inn, slik at sammenligningsgrunnlaget skal være best mulig. Når det gjelder serveringssteder tar vi inn alt fra barer, restauranter, hoteller, kinoer, flyplasser osv. så lenge stedet ikke regnes som privat.</p><p class=\"max-w-prose\">I tillegg har vi disse kravene: </p><h4 class=\"font-semibold ml-2\">• Prisen er for pils på tapp</h4><p class=\"max-w-prose\">Vi er strenge på dette for at sammenligningen skal være mest mulig epler og epler. Det er sikkert mange gode tilbud på bokser og flasker, men det er noe man like gjerne kan konsumere hjemme. </p><h4 class=\"font-semibold ml-2\">• Typisk det man får når man sier «en øl/pils, takk!»</h4><p class=\"max-w-prose\">Pilsen favner bredt og det er ukontroversielt å si at den er en standard. Om noen vil lage juicyipaguiden, bayerguiden osv., ønsker vi dem velkommen til det, men her er pils hellig.</p><h4 class=\"font-semibold ml-2\">• Ingen kvantumsrabatter</h4><p class=\"max-w-prose\">Noen utesteder gir lavere pris dersom du kjøper en mugge eller flere enheter. Vi kunne selvfølgelig omregnet dette til halvliterspris, men vi er opptatt av at Pilsguiden skal fungere enten du vil ta en øl alene eller med venner. Vi har forståelse for at serveringsstedene ønsker å holde kunder hos seg lenger, men vi er ikke promoteringsplattform og ønsker ikke å oppfordre til økt konsum. </p><h4 class=\"font-semibold ml-2\">• En pris alle kan få</h4><p class=\"max-w-prose\">Det finnes rabatter man kan få dersom man for eksempel er stamkunde eller student. Vi er opptatt av at siden skal kunne brukes av flest mulig, og per i dag har vi ikke planer om å legge inn priser som ikke alle kan få.</p></div></section><section><h3 class=\"text-xl font-bold my-2\">Hvem står bak Pilsguiden?</h3><p class=\"max-w-prose\">Utover alle pilsguider (eller «pilsfugler» om du fant oss via TV2) som sender oss priser, er vi to som står bak nettsiden: <a href=\"https://www.linkedin.com/in/garu/\" class=\"font-semibold underline\">Gard Ruud</a> og <a href=\"https://www.linkedin.com/in/tonynorgaard/\" class=\"font-semibold underline\">Tony Norgaard</a>.</p></section></article>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

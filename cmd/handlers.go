@@ -20,6 +20,7 @@ import (
 
 func (a *app) handleHome(w http.ResponseWriter, r *http.Request) {
 	fylker := stores.AppStore.GetFylkerData()
+	baseFylke := utils.ToBase(fylker)
 	totalBars, err := database.GetTotalBars(a.DB)
 	if err != nil || totalBars == 0 {
 		fmt.Println("Error total bars:", err)
@@ -35,7 +36,7 @@ func (a *app) handleHome(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error loading bottom ten bars:", err)
 		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
 	}
-	templates.Layout("Home", templates.Home(totalBars, fylker, templates.List(topTen), templates.List(bottomTen))).Render(r.Context(), w)
+	templates.Layout("Home", templates.Home(totalBars, baseFylke, topTen, bottomTen)).Render(r.Context(), w)
 }
 
 func (a *app) handleAbout(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +45,7 @@ func (a *app) handleAbout(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error getting about info:", err)
 		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
 	}
-	templates.Layout("About", templates.About(data)).Render(r.Context(), w)
+	templates.Layout("Om oss", templates.About(data)).Render(r.Context(), w)
 }
 
 func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
@@ -109,8 +110,9 @@ func (a *app) handleListFylke(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("unable to get bars: %v", err)
 	}
+
 	nextLocations := utils.ExtractSortedUniqueKommuner(bars)
-	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
+	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations, params["fylke"]), templates.List(bars))).Render(r.Context(), w)
 }
 
 func (a *app) handleListKommune(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +143,7 @@ func (a *app) handleListKommune(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("unable to get bars: %v", err)
 	}
 	nextLocations := utils.ExtractSortedUniqueSteder(bars)
-	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
+	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations, params["kommune"]), templates.List(bars))).Render(r.Context(), w)
 }
 
 func (a *app) handleListSted(w http.ResponseWriter, r *http.Request) {
@@ -155,6 +157,7 @@ func (a *app) handleListSted(w http.ResponseWriter, r *http.Request) {
 	navStore := models.Navigation{Level: "sted", ID: nav.Sted.ID}
 	stores.SetNavData(sessionStore, sessID, navStore)
 	if err != nil {
+		log.Printf("Failed to set nav data: %v", err)
 		w.WriteHeader(http.StatusNotFound)
 		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
 		return
@@ -172,7 +175,9 @@ func (a *app) handleListSted(w http.ResponseWriter, r *http.Request) {
 	}
 	nextLocations := utils.ExtractSortedUniqueSteder(bars)
 
-	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
+	fmt.Println(params["sted"])
+
+	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations, params["sted"]), templates.List(bars))).Render(r.Context(), w)
 }
 
 func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {

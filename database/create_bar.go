@@ -84,7 +84,14 @@ func upsertLocations(conn *pgx.Conn, adr models.AddressParts) (models.BarOSM, er
 
 	kommune, err := GetLocationIdByName(conn, adr.Kommune, "kommune")
 	if err != nil {
-		newKommune := models.Location{Name: adr.Kommune, Hierarchy: "kommune", Slug: utils.ToURL(adr.Kommune), Parent: &fylke}
+		newKommune := models.Location{
+			BaseLocation: models.BaseLocation{
+				Name: adr.Kommune,
+				Slug: utils.ToURL(adr.Kommune),
+			},
+			Hierarchy: "kommune",
+			Parent:    &fylke,
+		}
 		kommune, err = CreateNewLocation(conn, newKommune)
 		if err != nil {
 			return ids, fmt.Errorf("could not create kommune: %w", err)
@@ -96,7 +103,14 @@ func upsertLocations(conn *pgx.Conn, adr models.AddressParts) (models.BarOSM, er
 	if adr.Sted != "" {
 		sted, err := GetLocationIdByName(conn, adr.Sted, "sted")
 		if err != nil {
-			newSted := models.Location{Name: adr.Sted, Hierarchy: "sted", Slug: utils.ToURL(adr.Sted), Parent: &kommune}
+			newSted := models.Location{
+				BaseLocation: models.BaseLocation{
+					Name: adr.Sted,
+					Slug: utils.ToURL(adr.Sted),
+				},
+				Hierarchy: "sted",
+				Parent:    &kommune,
+			}
 			sted, err = CreateNewLocation(conn, newSted)
 			if err != nil {
 				return ids, fmt.Errorf("could not create sted: %w", err)

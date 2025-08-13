@@ -427,6 +427,33 @@ func GetBarMetadata(conn *pgx.Conn, barID int) (models.BarMetadata, error) {
 	return meta, nil
 }
 
+func GetAllLocations(conn *pgx.Conn) ([]models.Location, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var locs []models.Location
+
+	query := `SELECT id, name, slug, hierarchy, parent FROM locs ORDER BY name`
+
+	rows, err := conn.Query(ctx, query)
+	if err != nil {
+		return locs, err
+	}
+
+	for rows.Next() {
+		var loc models.Location
+		if err := rows.Scan(&loc.ID, &loc.Name, &loc.Slug, &loc.Hierarchy, &loc.Parent); err != nil {
+			return locs, fmt.Errorf("scanning row: %w", err)
+		}
+		locs = append(locs, loc)
+	}
+
+	if rows.Err() != nil {
+		return locs, fmt.Errorf("iterating rows: %w", rows.Err())
+	}
+
+	return locs, nil
+}
+
 func GetHappyKeysByBarID(conn *pgx.Conn, barID int) ([]models.HappyKey, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

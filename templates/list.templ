@@ -25,17 +25,39 @@ func FormatNorwegianDate(t time.Time) string {
 
 templ List(bars []models.Bar) {
     <section id="list">
-        <div>
+        <div class="flex flex-col gap-1">
         for index, bar := range bars {
-        <div x-data="{ open: false }" @click.outside="open = false">
-            <div @click="open = ! open">
-                <span>{bar.Name}</span>
-                <span>{setPrefix(bar)}{strconv.Itoa(int(bar.CurrentPint))},- </span>
-                <div x-show="open">
-                    @card(bar, index)
+            <div x-data="{ open: false }" @click.outside="open = false" class="bg-violet-200 dark:bg-emerald-900 rounded-lg shadow-lg w-full cursor-pointer">
+                <div @click="open = ! open">
+                    <div class="flex justify-between font-semibold border-b-2 border-violet-300 dark:border-emerald-950 py-2 pr-4 rounded-lg">
+                        <span class="flex flex-grow justify-left items-center min-w-5">
+                            <svg 
+                                viewBox="0 0 24 24" 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                fill="#000000"
+                                class="w-7 transition-transform duration-300 ease-in-out"
+                                :class="{ 'rotate-180': open }"
+                            >
+                                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                <g id="SVGRepo_iconCarrier">
+                                    <g>
+                                        <path fill="none" d="M0 0h24v24H0z"></path>
+                                        <path d="M12 15l-4.243-4.243 1.415-1.414L12 12.172l2.828-2.829 1.415 1.414z"></path>
+                                    </g>
+                                </g>
+                            </svg>
+                            <span class="text-left">{bar.Name}</span>
+                        </span>
+                        <span>{setPrefix(bar)}{strconv.Itoa(int(bar.CurrentPint))},- </span>
+                    </div>
+                    <div x-show="open" x-collapse>
+                        <div class="mt-1 px-4 pb-2 w-full">
+                            @card(bar, index)
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
         }
         </div>
     </section>

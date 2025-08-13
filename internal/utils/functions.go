@@ -150,3 +150,11 @@ func CheckValidLocationLevel(level string) bool {
 		return false
 	}
 }
+
+func ToBase(in []models.Location) []models.BaseLocation {
+	out := make([]models.BaseLocation, len(in))
+	for i := range in {
+		out[i] = in[i].BaseLocation
+	}
+	return out
+}

@@ -42,7 +42,7 @@ func Layout(title string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script src=\"https://unpkg.com/htmx.org@2.0.4\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script><script src=\"https://unpkg.com/htmx.org@1.9.12/dist/ext/remove-me.js\"></script><script src=\"https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4\"></script><link rel=\"stylesheet\" href=\"/static/styles.css\"></head><body><header><div class=\"max-w-xl\"><nav><a href=\"/\">Pilsguiden</a> <a href=\"/om-oss\">Om oss</a> <a href=\"/kontakt\">Kontakt</a> <a href=\"/donasjon\">Donasjon</a> <a href=\"/media\">Media</a></nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script src=\"https://unpkg.com/htmx.org@2.0.4\"></script><script defer src=\"https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script><script src=\"https://unpkg.com/htmx.org@1.9.12/dist/ext/remove-me.js\"></script><script src=\"https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4\"></script><link rel=\"stylesheet\" href=\"/static/styles.css\"></head><body class=\"bg-amber-100 text-slate-900 dark:bg-zinc-900 dark:text-slate-200\"><header class=\"bg-amber-200 dark:bg-zinc-950\"><div class=\"m-auto max-w-xl max-sm:px-3 py-2 mb-4 font-semibold\"><nav class=\"flex justify-between\"><div class=\"flex gap-2 items-baseline\"><a href=\"/\" class=\"hover:bg-violet-300 active:bg-violet-400 px-1 py-0.5 rounded-md font-extrabold text-2xl\"><h1>Pilsguiden</h1></a></div></nav>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -50,7 +50,7 @@ func Layout(title string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></header><main class=\"max-w-xl\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></header><main class=\"m-auto max-w-xl px-1 max-sm:px-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -58,7 +58,7 @@ func Layout(title string, content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"toasts\" hx-ext=\"remove-me\"></div></main><footer><hr><p>Et Pilz-gruppen konsept</p></footer></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"toasts\" hx-ext=\"remove-me\"></div></main><footer class=\"bg-skin-muted\"><hr><nav><a href=\"/\">Pilsguiden</a> <a href=\"/om-oss\">Om oss</a> <a href=\"/kontakt\">Kontakt</a> <a href=\"/donasjon\">Donasjon</a> <a href=\"/media\">Media</a></nav><p>Et Pilz-gruppen konsept</p></footer></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
