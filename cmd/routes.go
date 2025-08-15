@@ -24,21 +24,21 @@ func (app *app) routes() http.Handler {
 	r.Route("/admin", func(r chi.Router) {
 		r.Use(auth.AuthMiddleware)
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			templates.Layout("Vær hilset, Admin", templates.Search()).Render(r.Context(), w)
+			templates.Layout("Vær hilset, Admin", true, templates.Search()).Render(r.Context(), w)
 		})
 		r.Get("/create-bar", func(w http.ResponseWriter, r *http.Request) {
-			templates.Layout("Opprett bar", templates.BarManualForm()).Render(r.Context(), w)
+			templates.Layout("Opprett bar", true, templates.BarManualForm()).Render(r.Context(), w)
 		})
 		r.Get("/update-bar", func(w http.ResponseWriter, r *http.Request) {
-			templates.Layout("Oppdater Bar", templates.UpdateBar()).Render(r.Context(), w)
+			templates.Layout("Oppdater Bar", true, templates.UpdateBar()).Render(r.Context(), w)
 		})
 		r.Get("/create-brewery", func(w http.ResponseWriter, r *http.Request) {
-			templates.Layout("Opprett bryggeri", templates.CreateBrewery()).Render(r.Context(), w)
+			templates.Layout("Opprett bryggeri", true, templates.CreateBrewery()).Render(r.Context(), w)
 		})
 	})
 
 	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
-		templates.Layout("Login", templates.Login()).Render(r.Context(), w)
+		templates.Layout("Login", true, templates.Login()).Render(r.Context(), w)
 	})
 
 	r.Post("/auth/login", auth.LoginHandler)
@@ -46,13 +46,13 @@ func (app *app) routes() http.Handler {
 	r.Route("/liste", func(r chi.Router) {
 		r.Post("/setCustomTime", app.handleCustomTime)
 		r.Route("/{fylke}", func(r chi.Router) {
-			r.Get("/", app.handleListFylke)
+			r.Get("/", app.handleList)
 
 			r.Route("/{kommune}", func(r chi.Router) {
-				r.Get("/", app.handleListKommune)
+				r.Get("/", app.handleList)
 
 				r.Route("/{sted}", func(r chi.Router) {
-					r.Get("/", app.handleListSted)
+					r.Get("/", app.handleList)
 				})
 			})
 		})

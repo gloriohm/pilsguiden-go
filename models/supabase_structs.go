@@ -128,6 +128,11 @@ type UrlNav struct {
 	Sted    BaseLocation
 }
 
+type CurrentLvl struct {
+	Name string
+	ID   int
+}
+
 type HappyKey struct {
 	ID             int         `db:"id"`
 	BarID          int         `db:"bar"`

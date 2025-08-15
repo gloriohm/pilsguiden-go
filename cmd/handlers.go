@@ -19,6 +19,7 @@ import (
 )
 
 func (a *app) handleHome(w http.ResponseWriter, r *http.Request) {
+	sessionData := handlers.GetSessionData(r.Context())
 	fylker := stores.AppStore.GetFylkerData()
 	baseFylke := utils.ToBase(fylker)
 	totalBars, err := database.GetTotalBars(a.DB)
@@ -36,19 +37,21 @@ func (a *app) handleHome(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error loading bottom ten bars:", err)
 		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
 	}
-	templates.Layout("Home", templates.Home(totalBars, baseFylke, topTen, bottomTen)).Render(r.Context(), w)
+	templates.Layout("Pilsguiden", sessionData.Consented, templates.Home(totalBars, baseFylke, topTen, bottomTen)).Render(r.Context(), w)
 }
 
 func (a *app) handleAbout(w http.ResponseWriter, r *http.Request) {
+	sessionData := handlers.GetSessionData(r.Context())
 	data, err := database.GetAboutPageData(a.DB)
 	if err != nil {
 		fmt.Println("Error getting about info:", err)
 		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
 	}
-	templates.Layout("Om oss", templates.About(data)).Render(r.Context(), w)
+	templates.Layout("Om Pilsguiden", sessionData.Consented, templates.About(data)).Render(r.Context(), w)
 }
 
 func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
+	sessionData := handlers.GetSessionData(r.Context())
 	barParam := chi.URLParam(r, "slug")
 	bar, err := database.GetBarBySlug(a.DB, barParam)
 
@@ -81,106 +84,41 @@ func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
 
 	brews := stores.AppStore.GetBreweriesData()
 
-	templates.Layout("Bar", templates.BarPage(bar, hkeys, extra, brews, &user)).Render(r.Context(), w)
+	templates.Layout(bar.Name, sessionData.Consented, templates.BarPage(bar, hkeys, extra, brews, &user)).Render(r.Context(), w)
 }
 
-func (a *app) handleListFylke(w http.ResponseWriter, r *http.Request) {
+func (a *app) handleList(w http.ResponseWriter, r *http.Request) {
 	sessionData := handlers.GetSessionData(r.Context())
 	sessID := sessionData.SessionID
-	params := map[string]string{
-		"fylke": "/" + chi.URLParam(r, "fylke"),
-	}
-	nav, err := utils.SetNavParams(params)
+	consented := sessionData.Consented
+	fylke := chi.URLParam(r, "fylke")
+	kommune := chi.URLParam(r, "kommune")
+	sted := chi.URLParam(r, "sted")
 
+	nav, current, err := setNavParams(fylke, kommune, sted)
 	if err != nil {
+		log.Printf("Error setting nav: %s \n", err)
 		w.WriteHeader(http.StatusNotFound)
-		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
+		generateErrorPage(w, r.Context(), "Ugyldig URL", sessionData.Consented)
 		return
 	}
 
-	navStore := models.Navigation{Level: "fylke", ID: nav.Fylke.ID}
+	navStore := models.Navigation{Level: current.Name, ID: current.ID}
 	stores.SetNavData(sessionStore, sessID, navStore)
 
 	var bars []models.BarView
 	pref := stores.GetSessionData(sessionStore, sessID)
 	if pref.Preferences.CustomTime {
-		bars, err = database.GetBarsByLocationAndTime(a.DB, nav.Fylke.ID, "fylke", pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
+		bars, err = database.GetBarsByLocationAndTime(a.DB, current.ID, current.Name, pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
 	} else {
-		bars, err = database.GetBarsByLocation(a.DB, nav.Fylke.ID, "fylke")
+		bars, err = database.GetBarsByLocation(a.DB, current.ID, current.Name)
 	}
 	if err != nil {
 		log.Fatalf("unable to get bars: %v", err)
 	}
 
-	nextLocations := utils.ExtractSortedUniqueKommuner(bars)
-	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
-}
-
-func (a *app) handleListKommune(w http.ResponseWriter, r *http.Request) {
-	sessionData := handlers.GetSessionData(r.Context())
-	sessID := sessionData.SessionID
-	params := map[string]string{
-		"fylke":   "/" + chi.URLParam(r, "fylke"),
-		"kommune": "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune"),
-	}
-	nav, err := utils.SetNavParams(params)
-
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
-		return
-	}
-
-	navStore := models.Navigation{Level: "kommune", ID: nav.Kommune.ID}
-	stores.SetNavData(sessionStore, sessID, navStore)
-
-	var bars []models.BarView
-	pref := stores.GetSessionData(sessionStore, sessID)
-	if pref.Preferences.CustomTime {
-		bars, err = database.GetBarsByLocationAndTime(a.DB, nav.Kommune.ID, "kommune", pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
-	} else {
-		bars, err = database.GetBarsByLocation(a.DB, nav.Kommune.ID, "kommune")
-	}
-	if err != nil {
-		log.Fatalf("unable to get bars: %v", err)
-	}
-	nextLocations := utils.ExtractSortedUniqueSteder(bars)
-	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
-}
-
-func (a *app) handleListSted(w http.ResponseWriter, r *http.Request) {
-	sessionData := handlers.GetSessionData(r.Context())
-	sessID := sessionData.SessionID
-	params := map[string]string{
-		"fylke":   "/" + chi.URLParam(r, "fylke"),
-		"kommune": "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune"),
-		"sted":    "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune") + "/" + chi.URLParam(r, "sted"),
-	}
-	nav, err := utils.SetNavParams(params)
-	navStore := models.Navigation{Level: "sted", ID: nav.Sted.ID}
-	stores.SetNavData(sessionStore, sessID, navStore)
-	if err != nil {
-		log.Printf("Failed to set nav data: %v", err)
-		w.WriteHeader(http.StatusNotFound)
-		templates.Layout("Ugyldig URL", templates.ErrorPage()).Render(r.Context(), w)
-		return
-	}
-
-	var bars []models.BarView
-	pref := stores.GetSessionData(sessionStore, sessID)
-	if pref.Preferences.CustomTime {
-		bars, err = database.GetBarsByLocationAndTime(a.DB, nav.Sted.ID, "sted", pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
-	} else {
-		bars, err = database.GetBarsByLocation(a.DB, nav.Sted.ID, "sted")
-	}
-	if err != nil {
-		log.Fatalf("unable to get bars: %v", err)
-	}
-	nextLocations := utils.ExtractSortedUniqueSteder(bars)
-
-	fmt.Println(params["sted"])
-
-	templates.Layout("List", templates.ListLayout(templates.NavTree(nav), templates.LocationLinks(nextLocations), templates.List(bars))).Render(r.Context(), w)
+	nextLocations := extractNextLocs(bars, current.Name)
+	templates.Layout("List", consented, templates.ListView(nav, nextLocations, bars)).Render(r.Context(), w)
 }
 
 func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +126,7 @@ func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {
 	sessID := sessionData.SessionID
 	if err := r.ParseForm(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
+		generateErrorPage(w, r.Context(), "Bad request", sessionData.Consented)
 		return
 	}
 	decoder := form.NewDecoder()
@@ -247,6 +185,7 @@ func (a *app) handleSearchBar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *app) handleFetchBar(w http.ResponseWriter, r *http.Request) {
+	sessionData := handlers.GetSessionData(r.Context())
 	barSlug := r.URL.Query().Get("bar_slug")
 	decoded, _ := url.QueryUnescape(barSlug)
 
@@ -254,7 +193,7 @@ func (a *app) handleFetchBar(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
+		generateErrorPage(w, r.Context(), "Bad Request", sessionData.Consented)
 		return
 	}
 
@@ -264,7 +203,7 @@ func (a *app) handleFetchBar(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
+			generateErrorPage(w, r.Context(), "Bad Request", sessionData.Consented)
 			return
 		}
 	}
@@ -274,7 +213,7 @@ func (a *app) handleFetchBar(w http.ResponseWriter, r *http.Request) {
 		extra, err = database.GetBarMetadata(a.DB, bar.ID)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
+			generateErrorPage(w, r.Context(), "Bad Request", sessionData.Consented)
 			return
 		}
 	}

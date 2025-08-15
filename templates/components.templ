@@ -1,0 +1,87 @@
+package templates
+
+import "go-router/models"
+
+templ customTime() {
+   <form 
+		hx-post="/liste/setCustomTime" 
+		hx-target="#list" 
+		hx-swap="outerHTML"
+		method="POST"
+		class="space-y-4 max-w-md"
+	>
+        <span>
+            <label for="customTime">Velg tid:</label>
+            <input
+                type="time"
+                id="customTime"
+                name="customTime"
+                required
+            />
+        </span>
+        <span>
+        <label for="customDay">Velg dag:</label>
+            <select id="customDay" name="customDay">
+                <option value="1">Mandag</option>
+                <option value="2">Tirsdag</option>
+                <option value="3">Onsdag</option>
+                <option value="4">Torsdag</option>
+                <option value="5">Fredag</option>
+                <option value="6">Lørdag</option>
+                <option value="0">Søndag</option>
+            </select>
+        </span>
+        <span>
+            <button type="submit">Hent liste</button>
+        </span>
+    </form>
+}
+
+templ locationLinks(locations []models.BaseLocation) {
+    <div>
+        <nav class="flex gap-2 font-semibold flex-wrap">
+            for _, location := range locations {
+            <a href={templ.SafeURL("/liste" + location.Slug)} class="hover:bg-violet-300 active:bg-violet-400 bg-amber-200 dark:bg-zinc-950 rounded-md p-1">{location.Name}</a>
+        }
+        </nav>
+    </div>
+}
+
+templ navTree(url models.UrlNav) {
+    <nav>
+        <a href="/">Hjem</a>
+        if url.Fylke.Slug != "" {
+            <span> > </span>
+            <a href={templ.SafeURL("/liste" + url.Fylke.Slug)}>{url.Fylke.Name}</a>
+        }
+        if url.Kommune.Slug != "" {
+            <span> > </span>
+            <a href={templ.SafeURL("/liste" + url.Kommune.Slug)}>{url.Kommune.Name}</a>
+        }
+        if url.Sted.Slug != "" {
+            <span> > </span>
+            <a href={templ.SafeURL("/liste" + url.Sted.Slug)}>{url.Sted.Name}</a>
+        }
+    </nav>
+}
+
+templ Search() {
+    <nav>
+        <input type="text" name="search"
+            hx-get="/search"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#search-results"
+            placeholder="Søk på bar eller sted">
+        <div id="search-results"></div>
+    </nav>
+}
+
+templ SearchResult(result []models.SearchResult) {
+    <ul>
+        for _, r := range result {
+            <li>
+                <a href={templ.SafeURL(r.Type + r.Slug)}>{r.Name}</a>
+            </li>
+        }
+    </ul>
+}

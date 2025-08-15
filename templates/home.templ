@@ -13,7 +13,7 @@ templ Home(total int, fylker []models.BaseLocation, topList, bottomList []models
             </p>
         </article>
         <h3 class="font-semibold py-2">Velg sted:</h3>
-        @LocationLinks(fylker)
+        @locationLinks(fylker)
         <h3 class="text-xl my-2 font-bold">Norges billigste øl</h3>
         @List(topList)
         <h3 class="text-xl my-2 font-bold">Norges dyreste øl</h3>
