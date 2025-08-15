@@ -1,6 +1,8 @@
 package templates
 
-templ Layout(title string, content templ.Component) {
+import "go-router/internal/utils"
+
+templ Layout(title string, consented bool, content templ.Component) {
     <html>
         <head>
             <meta charset="utf-8">
@@ -13,6 +15,7 @@ templ Layout(title string, content templ.Component) {
             <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/remove-me.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
             <link rel="stylesheet" href="/static/styles.css">
+            <script src="https://analytics.ahrefs.com/analytics.js" data-key="BSdd73M9Mf8/aCR7mwIlVw" defer="true"></script>
         </head>
         <body class="bg-amber-100 text-slate-900 dark:bg-zinc-900 dark:text-slate-200">
             <header class="bg-amber-200 dark:bg-zinc-950">
@@ -37,7 +40,6 @@ templ Layout(title string, content templ.Component) {
             <footer class="bg-skin-muted">
                 <hr />
                 <nav>
-                    <a href="/">Pilsguiden</a>
                     <a href="/om-oss">Om oss</a>
                     <a href="/kontakt">Kontakt</a>
                     <a href="/donasjon">Donasjon</a>
@@ -45,6 +47,23 @@ templ Layout(title string, content templ.Component) {
                 </nav>
                 <p>Et Pilz-gruppen konsept</p>
             </footer>
+            if !consented {
+                @cookieBanner()
+            }
         </body>
     </html>
+}
+
+templ cookieBanner() {
+    <div class="flex justify-center">
+        <div id="cookie-banner" class="fixed bottom-4 bg-amber-200 dark:bg-zinc-950 rounded-lg z-50 py-4 px-2 w-full max-w-xl">
+            <div class="flex gap-1 items-center justify-between max-sm:flex-col">
+                <span>Denne siden bruker cookies.</span>
+                <span class="flex gap-1">
+                    <button class={utils.BtnWarning}>Kun nødvendige</button>
+                    <button class={utils.BtnPrimary}>Godta alle</button>
+                </span>
+            </div>
+        </div>
+    </div>
 }

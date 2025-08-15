@@ -8,15 +8,36 @@ import (
 	"time"
 )
 
-type CtxKey string
+type RequestData struct {
+	Consented bool
+	SessionID string
+}
+
+type ctxKey struct{}
+
+func WithData(ctx context.Context, data RequestData) context.Context {
+	return context.WithValue(ctx, ctxKey{}, data)
+}
+
+func GetSessionData(ctx context.Context) RequestData {
+	if v, ok := ctx.Value(ctxKey{}).(RequestData); ok {
+		return v
+	}
+	return RequestData{}
+}
 
 const sessionCookieName = "session_id"
-
-var sessionKey = CtxKey("session_id")
+const consentCookieName = "user_consent"
 
 func SessionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var sessID string
+		var consented bool
+
+		consentCookie, err := r.Cookie(consentCookieName)
+		if err != nil || consentCookie.Value == "" {
+			consented = true
+		}
 
 		cookie, err := r.Cookie(sessionCookieName)
 		if err != nil || cookie.Value == "" {
@@ -35,19 +56,16 @@ func SessionMiddleware(next http.Handler) http.Handler {
 			sessID = cookie.Value
 		}
 
-		ctx := context.WithValue(r.Context(), sessionKey, sessID)
+		data := RequestData{
+			Consented: consented,
+			SessionID: sessID,
+		}
+
+		ctx := WithData(r.Context(), data)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func generateSessionID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), rand.Int63())
-}
-
-func GetSessionID(r *http.Request) string {
-	val := r.Context().Value(sessionKey)
-	if id, ok := val.(string); ok {
-		return id
-	}
-	return ""
 }

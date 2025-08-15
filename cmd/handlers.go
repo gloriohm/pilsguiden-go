@@ -85,7 +85,8 @@ func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *app) handleListFylke(w http.ResponseWriter, r *http.Request) {
-	sessID := handlers.GetSessionID(r)
+	sessionData := handlers.GetSessionData(r.Context())
+	sessID := sessionData.SessionID
 	params := map[string]string{
 		"fylke": "/" + chi.URLParam(r, "fylke"),
 	}
@@ -116,7 +117,8 @@ func (a *app) handleListFylke(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *app) handleListKommune(w http.ResponseWriter, r *http.Request) {
-	sessID := handlers.GetSessionID(r)
+	sessionData := handlers.GetSessionData(r.Context())
+	sessID := sessionData.SessionID
 	params := map[string]string{
 		"fylke":   "/" + chi.URLParam(r, "fylke"),
 		"kommune": "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune"),
@@ -147,7 +149,8 @@ func (a *app) handleListKommune(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *app) handleListSted(w http.ResponseWriter, r *http.Request) {
-	sessID := handlers.GetSessionID(r)
+	sessionData := handlers.GetSessionData(r.Context())
+	sessID := sessionData.SessionID
 	params := map[string]string{
 		"fylke":   "/" + chi.URLParam(r, "fylke"),
 		"kommune": "/" + chi.URLParam(r, "fylke") + "/" + chi.URLParam(r, "kommune"),
@@ -181,7 +184,8 @@ func (a *app) handleListSted(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {
-	sessID := handlers.GetSessionID(r)
+	sessionData := handlers.GetSessionData(r.Context())
+	sessID := sessionData.SessionID
 	if err := r.ParseForm(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		templates.Layout("Feil oppstod under behandling av data", templates.ErrorPage()).Render(r.Context(), w)
