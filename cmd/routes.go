@@ -64,6 +64,11 @@ func (app *app) routes() http.Handler {
 	r.Get("/search", app.handleSearch)
 	r.Get("/search-bar", app.handleSearchBar)
 	r.Get("/fetch-bar", app.handleFetchBar)
+	r.Route("/logic", func(r chi.Router) {
+		r.Post("/set-consent", handleConsent)
+		r.Post("/do-nothing", handleDoNothing)
+		r.Post("/update-consent", handleUpdateConsent)
+	})
 
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/v1", func(r chi.Router) {

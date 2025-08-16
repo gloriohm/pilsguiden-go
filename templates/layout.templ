@@ -1,7 +1,5 @@
 package templates
 
-import "go-router/internal/utils"
-
 templ Layout(title string, consented bool, content templ.Component) {
     <html>
         <head>
@@ -36,14 +34,20 @@ templ Layout(title string, consented bool, content templ.Component) {
             <main class="m-auto max-w-xl px-1 max-sm:px-4">
                 @content
                 <div id="toasts" hx-ext="remove-me"></div>
+                <div id="pop-up"></div>
             </main>
-            <footer class="bg-skin-muted">
+            <footer>
                 <hr />
                 <nav>
                     <a href="/om-oss">Om oss</a>
                     <a href="/kontakt">Kontakt</a>
                     <a href="/donasjon">Donasjon</a>
                     <a href="/media">Media</a>
+                    <button
+                        hx-post="/logic/update-consent"
+                        hx-swap="innerHTML"
+                        hx-target="#pop-up"
+                    >Oppdater samtykke</button>
                 </nav>
                 <p>Et Pilz-gruppen konsept</p>
             </footer>
@@ -55,15 +59,66 @@ templ Layout(title string, consented bool, content templ.Component) {
 }
 
 templ cookieBanner() {
-    <div class="flex justify-center">
-        <div id="cookie-banner" class="fixed bottom-4 bg-amber-200 dark:bg-zinc-950 rounded-lg z-50 py-4 px-2 w-full max-w-xl">
+    <div class="flex justify-center" id="cookie-banner">
+        <div class="fixed bottom-4 bg-amber-200 dark:bg-zinc-950 rounded-lg z-50 p-4 w-full max-w-2xl">
             <div class="flex gap-1 items-center justify-between max-sm:flex-col">
                 <span>Denne siden bruker cookies.</span>
                 <span class="flex gap-1">
-                    <button class={utils.BtnWarning}>Kun nødvendige</button>
-                    <button class={utils.BtnPrimary}>Godta alle</button>
+                    <button 
+                        class={btnWarning}
+                        hx-post="/logic/set-consent" 
+		                hx-swap="delete"
+                        hx-target="#cookie-banner"
+		                name="level"
+                        value="essential"
+                        type="submit"
+                    >Kun nødvendige</button>
+                    <button 
+                        class={btnPrimary}
+                        hx-post="/logic/set-consent"
+		                hx-swap="delete"
+                        hx-target="#cookie-banner"
+		                name="level"
+                        value="all"
+                        type="submit"
+                    >Godta alle</button>
                 </span>
             </div>
+        </div>
+    </div>
+}
+
+templ UpdateConsent() {
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-200 dark:bg-zinc-950 rounded-lg z-50 p-4" id="update-consent">
+        <div>Endret mening? Ikke noe problem. Hvis du lurer på hva vi bruker cookies til
+            og hva de forskjellige samtykkenivåene inkluderer, kan du lese alt om dette 
+            <a href="/cookies" class={url}>her</a>.
+        </div>
+        <div class="flex gap-1">
+            <button
+                class={btnSecondary}
+                hx-post="/logic/do-nothing"
+                hx-swap="delete"
+                hx-target="#update-consent"
+            >Avbryt</button>
+            <button 
+                class={btnWarning}
+                hx-post="/logic/set-consent" 
+                hx-swap="delete"
+                hx-target="#update-consent"
+                name="level"
+                value="essential"
+                type="submit"
+            >Kun nødvendige</button>
+            <button 
+                class={btnPrimary}
+                hx-post="/logic/set-consent"
+                hx-swap="delete"
+                hx-target="#update-consent"
+                name="level"
+                value="all"
+                type="submit"
+            >Godta alle</button>
         </div>
     </div>
 }

@@ -37,6 +37,8 @@ func SessionMiddleware(next http.Handler) http.Handler {
 		consentCookie, err := r.Cookie(consentCookieName)
 		if err != nil || consentCookie.Value == "" {
 			consented = false
+		} else {
+			consented = true
 		}
 
 		cookie, err := r.Cookie(sessionCookieName)
