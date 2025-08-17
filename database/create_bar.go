@@ -126,10 +126,16 @@ func upsertLocations(conn *pgx.Conn, adr models.AddressParts) (models.BarOSM, er
 func barAuto(price int, size float64, name string) models.BarAutoFormat {
 	auto := models.BarAutoFormat{IsActive: true, PriceUpdated: time.Now(), PriceChecked: time.Now()}
 	auto.Slug = utils.ToURL(name)
-	if size == 0.5 {
-		auto.Pint = price
-	} else {
-		auto.Pint = int(float64(price) / size / 2)
-	}
+	auto.Pint = ToPint(price, size)
 	return auto
+}
+
+func ToPint(price int, size float64) int {
+	var pint int
+	if size == 0.5 {
+		pint = price
+	} else {
+		pint = int(float64(price) / size / 2)
+	}
+	return pint
 }

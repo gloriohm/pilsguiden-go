@@ -66,39 +66,142 @@ func daysFromBitmask(mask int) string {
 	return strings.Join(names, ", ")
 }
 
-templ BarPage(bar *models.Bar, hkeys []models.HappyKey, extra models.BarMetadata, breweries []models.Brewery, user *models.User) {
+templ BarPage(bar *models.Bar, hkeys []models.HappyKey, extra models.BarMetadata, user *models.User) {
     <section>
         <div>
-            <h1>{bar.Name}</h1>
+            <h2>{bar.Name}</h2>
             if user.Admin {
                 <a href={"/admin/update-bar/" + strconv.Itoa(int(bar.ID))}>Rediger</a>
             }
-            <p>{bar.Price},- for {strconv.FormatFloat(bar.Size, 'f', 1, 64)}l</p>
+            <p><span id={"regular_price"}>{bar.Price}</span>,- for {strconv.FormatFloat(bar.Size, 'f', 1, 64)}l</p>
             if bar.Pint != bar.Price {
-                <p>*Tilsvarer {strconv.Itoa(int(bar.Pint))},- for en halvliter</p>
+                <p>*Tilsvarer <span id={"regular_pint"}>{bar.Pint}</span>,- for en halvliter</p>
             }
-            <p>Bryggeri: {bar.Brewery}</p>
+			<p>Pris sjekket: <span id={"regular_checked"}>{FormatNorwegianDate(bar.PriceChecked)}</span></p>
+			<button
+				class={btnPrimary}
+				hx-get={fmt.Sprintf("/logic/price-confirmer?type=bar&id=%d", bar.ID)}
+				hx-swap="innerHTML"
+				hx-target="#pop-up"
+			>Prisen stemmer</button>
+			<button
+				class={btnSecondary}
+				hx-get={fmt.Sprintf("/logic/price-updater?type=bar&id=%d&size=%s", bar.ID, strconv.FormatFloat(bar.Size, 'f', 1, 64))}
+				hx-swap="innerHTML"
+				hx-target="#pop-up"
+			>Prisen er feil</button>
+            <p>Bryggeri: <span id="brewery">{bar.Brewery}</span></p>
             if bar.Brewery == "Ukjent" {
-                <button>Legg til bryggeri</button>
+                <button
+					class={btnPrimary}
+					hx-get={"/logic/brewery-picker?id=" + strconv.Itoa(int(bar.ID))}
+					hx-swap="innerHTML"
+					hx-target="#pop-up"
+				>Legg til bryggeri</button>
             }
             if bar.TimedPrices && len(hkeys) > 0 {
-                <h2>Tidsbestemte priser:</h2>
+                <h3>Tidsbestemte priser:</h3>
                 <ul>
                     for _, hkey := range hkeys {
-                        <li>{hkey.Price},- {daysFromBitmask(hkey.Day)}, fra {hkey.FromTime.Format("15:04")} til {hkey.UntilTime.Format("15:04")}</li>
+                        <li>
+							<div>
+								<span id={"happy_price_" + strconv.Itoa(int(hkey.ID))}>{hkey.Price}</span>,- <span>{daysFromBitmask(hkey.Day)}</span>, fra <span>{hkey.FromTime.Format("15:04")}</span>
+								til <span>{hkey.UntilTime.Format("15:04")}</span>
+							</div>
+							if hkey.Price != hkey.Pint {
+								<div>
+									<p>*Tilsvarer <span id={"happy_pint_" + strconv.Itoa(int(hkey.ID))}>{hkey.Pint}</span>,- for en halvliter</p>
+								</div>
+							}
+							<div>
+								<p>Pris sjekket: <span id={"happy_checked_" + strconv.Itoa(int(hkey.ID))}>{FormatNorwegianDate(hkey.PriceChecked)}</span></p>
+								<button
+									class={btnPrimary}
+									hx-get={"/logic/price-confirmer?type=hkey&id=" + strconv.Itoa(int(hkey.ID))}
+									hx-swap="innerHTML"
+									hx-target="#pop-up"
+								>Prisen stemmer</button>
+								<button
+									class={btnSecondary}
+									hx-get={fmt.Sprintf("/logic/price-updater?type=hkey&id=%d&size=%s", hkey.ID, strconv.FormatFloat(hkey.Size, 'f', 1, 64))}
+									hx-swap="innerHTML"
+									hx-target="#pop-up"
+								>Prisen er feil</button>
+							</div>
+						</li>
                     }
                 </ul>
             }
         </div>
-    </section>
+    </section>   
+}
 
-    <div>
-        <p>Velg bryggeri:</p>
-        <select>
-            <option>Velg bryggeri</option>
-        for _, brew := range breweries {
-            <option value={brew.Name}>{brew.Name}</option>
-        }
-        </select>
+templ BreweryPicker(barID string, brews []models.Brewery) {
+	<div class={popupContainer} id="brewery-picker">
+		<p>Så du vet hvilket bryggeri baren fører? Hjelp oss med å legge til bryggeri der vi ikke vet!</p>
+        <p>Husk: vi linker kun det billigste bryggeriet man får servert på baren.</p>
+		<p>Mangler vi bryggeriet? Send oss en mail på <a href="mailto:pilsguiden@hotmail.com" class="font-semibold">pilsguiden@hotmail.com</a></p>
+		<p>Velg bryggeri:</p>
+		<form hx-post="/logic/update-brewery" hx-target="#pop-up" hx-swap="innerHTML">
+			<select name="new_brew">
+				<option disabled selected>Ikke valgt</option>
+			for _, brew := range brews {
+				<option value={brew.Name}>{brew.Name}</option>
+			}
+			</select>
+			<button
+				type="button"
+				class={btnWarning}
+				hx-get="/logic/do-nothing"
+				hx-target="#pop-up"
+				hx-swap="innerHTML"
+			>Avbryt</button>
+			<button type="submit" name="bar_id" value={barID} class={btnPrimary}>Oppdater</button>
+		</form>
     </div>
+}
+
+templ PriceUpdater(updateType, id, size string) {
+	<div class={popupContainer} id="price-updater">
+		<p>Har baren oppdatert prisen? Hjelp oss med å holde siden oppdatert!</p>
+		<p>Skriv inn prisen du betalte, så tar vi oss av konverteringen til halvliterspris
+		dersom baren har falt offer for shrinkflation og ikke lenger tilbyr
+		gullstandarden for servingerstørrelse i metriske land.</p>
+		<p>Har baren byttet serveringsstørrelse? Send oss en mail på <a href="mailto:pilsguiden@hotmail.com" class="font-semibold">pilsguiden@hotmail.com</a></p>
+		<form hx-post="/logic/update-price" hx-target="#pop-up" hx-swap="innerHTML">
+			<label for="price" class="block">Ny pris:</label>
+			<input type="number" id="new_price" name="new_price" required class="w-full border p-2" />
+			<input hidden type="decimal" id="size" name="size" value={size} />
+			<button
+				type="button"
+				class={btnWarning}
+				hx-get="/logic/do-nothing"
+				hx-target="#pop-up"
+				hx-swap="innerHTML"
+			>Avbryt</button>
+			<button type="submit" name="update_target" value={updateType + ":" + id} class={btnPrimary}>Oppdater</button>
+		</form>
+	</div>
+}
+
+templ PriceConfirmer(updateType, id string) {
+	<div class={popupContainer} id="price-confirmer">
+		<p>Har baren fortsatt samme pris? Hjelp oss med å holde siden oppdatert ved å bekrefte at prisen fortsatt stemmer!</p>
+		<button
+			class={btnWarning}
+			type="button"
+			hx-get="/logic/do-nothing"
+			hx-target="#pop-up"
+			hx-swap="innerHTML"
+		>Avbryt</button>
+		<button
+			class={btnPrimary}
+			type="submit"
+			name="update_target"
+			value={updateType + ":" + id}
+			hx-post="/logic/confirm-price"
+			hx-target="#pop-up"
+			hx-swap="innerHTML"
+		>Bekreft</button>
+	</div>
 }

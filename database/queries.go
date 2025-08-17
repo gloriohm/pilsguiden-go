@@ -620,3 +620,32 @@ WHERE b.is_active IS true
   ) = $3
 ORDER BY current_pint ASC
 `
+
+func UpdatePricePublic(conn *pgx.Conn, p models.UpdatedPrice) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	const query = `
+		INSERT INTO price_control
+			(target_id, target_table, price, size, pint, price_updated, price_checked)
+		VALUES
+			($1, $2, $3, $4, $5, $6, $7);
+	`
+
+	cmdTag, err := conn.Exec(ctx, query, p.TargetID,
+		p.TargetTable,
+		p.Price,
+		p.Size,
+		p.Pint,
+		p.PriceUpdated,
+		p.PriceChecked)
+	if err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("no rows updated for id")
+	}
+
+	return nil
+}

@@ -161,3 +161,13 @@ type User struct {
 	Email string
 	Admin bool
 }
+
+type UpdatedPrice struct {
+	TargetID     int       `db:"target_id"`
+	TargetTable  string    `db:"target_table"`
+	Price        int       `db:"price"`
+	Size         float64   `db:"size"`
+	Pint         int       `db:"pint"`
+	PriceUpdated time.Time `db:"updated_at"`
+	PriceChecked time.Time `db:"price_checked"`
+}

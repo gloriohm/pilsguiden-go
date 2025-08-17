@@ -82,9 +82,7 @@ func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	brews := stores.AppStore.GetBreweriesData()
-
-	templates.Layout(bar.Name, sessionData.Consented, templates.BarPage(bar, hkeys, extra, brews, &user)).Render(r.Context(), w)
+	templates.Layout(bar.Name, sessionData.Consented, templates.BarPage(bar, hkeys, extra, &user)).Render(r.Context(), w)
 }
 
 func (a *app) handleList(w http.ResponseWriter, r *http.Request) {

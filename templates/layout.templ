@@ -26,6 +26,7 @@ templ Layout(title string, consented bool, content templ.Component) {
                             >
                                 <h1>Pilsguiden</h1>
                             </a>
+                            <button hx-post="/logic/test-toast" hx-swap="none" class={btnPrimary}>Test</button>
                         </div>
                     </nav>
                 @Search()
@@ -44,7 +45,7 @@ templ Layout(title string, consented bool, content templ.Component) {
                     <a href="/donasjon">Donasjon</a>
                     <a href="/media">Media</a>
                     <button
-                        hx-post="/logic/update-consent"
+                        hx-get="/logic/consent-updater"
                         hx-swap="innerHTML"
                         hx-target="#pop-up"
                     >Oppdater samtykke</button>
@@ -88,8 +89,8 @@ templ cookieBanner() {
     </div>
 }
 
-templ UpdateConsent() {
-    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-200 dark:bg-zinc-950 rounded-lg z-50 p-4" id="update-consent">
+templ ConsentUpdater() {
+    <div class={popupContainer} id="consent-updater">
         <div>Endret mening? Ikke noe problem. Hvis du lurer på hva vi bruker cookies til
             og hva de forskjellige samtykkenivåene inkluderer, kan du lese alt om dette 
             <a href="/cookies" class={url}>her</a>.
@@ -97,15 +98,15 @@ templ UpdateConsent() {
         <div class="flex gap-1">
             <button
                 class={btnSecondary}
-                hx-post="/logic/do-nothing"
+                hx-get="/logic/do-nothing"
                 hx-swap="delete"
-                hx-target="#update-consent"
+                hx-target="#consent-updater"
             >Avbryt</button>
             <button 
                 class={btnWarning}
                 hx-post="/logic/set-consent" 
                 hx-swap="delete"
-                hx-target="#update-consent"
+                hx-target="#consent-updater"
                 name="level"
                 value="essential"
                 type="submit"
@@ -114,7 +115,7 @@ templ UpdateConsent() {
                 class={btnPrimary}
                 hx-post="/logic/set-consent"
                 hx-swap="delete"
-                hx-target="#update-consent"
+                hx-target="#consent-updater"
                 name="level"
                 value="all"
                 type="submit"

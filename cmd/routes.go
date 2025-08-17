@@ -65,18 +65,23 @@ func (app *app) routes() http.Handler {
 	r.Get("/search-bar", app.handleSearchBar)
 	r.Get("/fetch-bar", app.handleFetchBar)
 	r.Route("/logic", func(r chi.Router) {
+		r.Get("/brewery-picker", handleBreweryPicker)
+		r.Get("/consent-updater", handleConsentUpdater)
+		r.Get("/price-confirmer", handlePriceConfirmer)
+		r.Get("/price-updater", handlePriceUpdater)
+		r.Get("/do-nothing", handleDoNothing)
+		r.Post("/confirm-price", app.handleConfirmPrice)
 		r.Post("/set-consent", handleConsent)
-		r.Post("/do-nothing", handleDoNothing)
-		r.Post("/update-consent", handleUpdateConsent)
+		r.Post("/update-brewery", app.handleUpdateBrewery)
+		r.Post("/update-price", app.handleUpdatePrice)
+		r.Post("/test-toast", testToast)
 	})
 
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/v1", func(r chi.Router) {
 			r.Use(app.APIKeyMiddleware)
-			r.Post("/update-brewery", app.handleUpdateBrewery)
 			r.Post("/create-brewery", app.handleCreateBrewery)
 			r.Post("/create-bar", app.handleCreateBar)
-			r.Post("/confirm-price", app.handleConfirmPrice)
 			r.Get("/fetch-bars", app.handleFetchBars)
 		})
 	})

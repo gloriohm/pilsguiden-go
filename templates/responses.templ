@@ -1,12 +1,14 @@
 package templates
 
 templ Toast(msg string) {
-    <div class="toast" remove-me="2s" role="status" aria-live="polite">
-        <p>{msg}</p>
+    <div hx-swap-oob="beforeend:#toasts">
+        <div id="toast" remove-me="2s">
+            <p>{msg}</p>
+        </div>
     </div>
 }
 
-templ UpdateInterface(msg, value string) {
-    @templ.Raw(value)
+templ UpdateInterface(msg, value, elementID string) {
     @Toast(msg)
+    <div id={elementID} hx-swap-oob="textContent">{value}</div>
 }
