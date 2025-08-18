@@ -10,3 +10,29 @@ templ ListView(url models.UrlNav, locs []models.BaseLocation, bars []models.BarV
         @List(bars)
     </section>
 }
+
+templ Filters(prefs models.SessionData, brews []models.Brewery minPrice, maxPrice int) {
+    <ul class="flex gap-1">
+        <li>
+            <label for="sort-selector">Sortering:</label>
+            <select id="sort-selector" name="sort">
+                <option selected value="price_asc">Pris lav -> høy</option>
+                <option value="price_dec">Pris høy -> lav</option>
+                <option value="alpha_asc">Bar a -> å</option>
+                <option value="alpha_dec">Bar å -> a</option>
+            </select>
+        </li>
+        <li>
+            <fieldset>
+                <legend class="font-semibold mb-2">Filtrer bryggeri:</legend>
+                for _, brew := range brews {
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="brewery" value={brew.ID}>
+                    <span>{brew.Name}</span>
+                    <span>brew.Count</span>
+                </label>
+                }
+            </fieldset>
+        </li>
+    </ul>
+}
