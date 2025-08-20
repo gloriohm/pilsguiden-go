@@ -1,32 +1,68 @@
 package templates
 
-import "go-router/models"
+import (
+    "fmt"
 
-templ UpdateBar() {
-    <section>
-        <input type="text" name="search"
-            hx-get="/search-bar"
-            hx-trigger="keyup changed delay:500ms"
-            hx-target="#bar-search-results"
-            placeholder="Søk på bar">
-        <div id="bar-search-results"></div>
-        <div id="bar-form"></div>
-    </section>
-}
+    "go-router/models"
+)
 
-templ BarSearchResult(result []models.SearchResult) {
-    <div>
-        for _, r := range result {
-            <button value={r.Slug} name="bar_slug" hx-get="/fetch-bar" hx-target="#bar-form" hx-swap="outerHTML">{r.Name}</button>
-        }
-    </div>
-}
-
-templ BarForm(bar *models.Bar, meta models.BarMetadata, hk []models.HappyKey) {
+templ UpdateBarForm(bar models.Bar, hk []models.HappyKey, brews []models.Brewery) {
     <div>
         <h2>{bar.Name}</h2>
-        <form>
-        
+        <form class="flex flex-col gap-2">
+            <input hidden name="id" value={bar.ID}>
+            <span>
+                <label for="name">Navn:</label>
+                <input id="name" name="name" type="text" value={bar.Name} placeholder={bar.Name} class={input}>
+            </span>
+            <div class="flex justify-between gap-1">
+                <span>
+                    <label for="price">Pris:</label>
+                    <input id="price" name="price" type="number" value={bar.Price} class={input}>
+                </span>
+                <span>
+                    <label for="size">Størrelse:</label>
+                    <input id="size" name="size" type="number" value={bar.Size} class={input}>
+                </span>
+                <span>
+                    <label for="brewery">Bryggeri:</label>
+                    <select name="brewery" id="brewery" class={curtain}>
+                    for _, brew := range brews {
+                        <option value={brew.Name} selected?={brew.Name == bar.Brewery}>{brew.Name}</option>
+                    }
+                    </select>
+                </span>
+            </div>
+            <span>
+                <label for="address">Adresse:</label>
+                <input name="address" type="text" value={bar.Address} class={input}>
+            </span>
+            <div class="flex justify-between">
+                <span>
+                    <label for="lat">Latitude</label>
+                    <input name="lat" type="number" step="any" value={bar.Latitude} class={input}>
+                </span>
+                <span>
+                    <label for="lon">Longitude</label>
+                    <input name="lon" type="number" step="any" value={bar.Longitude} class={input}>
+                </span>
+            </div>
+            <span>
+                <label for="orgnummer">Orgnummer:</label>
+                <input name="orgnummer" type="text" value={bar.OrgNummer} class={input}>
+            </span>
+            <span>
+                <label for="slug">Pilsguiden-url:</label>
+                <input name="slug" type="text" value={bar.Slug} class={input}>
+            </span>
+            <div class="flex gap-2">
+                <label for="active">(De)aktiver:</label>
+                <input name="active" type="checkbox" checked={bar.IsActive}>
+            </div>
+            <div>
+                <a href={fmt.Sprintf("/bar/%s", bar.Slug)} class={btnWarning}>Tilbake</a>
+                <button hx-post="/logic/update-bar" hx-swap="none" type="submit" class={btnPrimary}>Oppdater</button>
+            </div>
         </form>
     </div>
 }

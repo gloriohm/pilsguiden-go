@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/a-h/templ"
@@ -170,51 +171,46 @@ func (a *app) handleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *app) handleSearchBar(w http.ResponseWriter, r *http.Request) {
-	searchTerm := r.URL.Query().Get("search")
-	decoded, _ := url.QueryUnescape(searchTerm)
-
-	result, err := database.GetBarSearchResult(a.DB, decoded)
-	if err != nil {
-		log.Fatalf("unable to get search result: %v", err)
-	}
-
-	templ.Handler(templates.BarSearchResult(result)).ServeHTTP(w, r)
-}
-
-func (a *app) handleFetchBar(w http.ResponseWriter, r *http.Request) {
-	sessionData := handlers.GetSessionData(r.Context())
-	barSlug := r.URL.Query().Get("bar_slug")
-	decoded, _ := url.QueryUnescape(barSlug)
-
-	bar, err := database.GetBarBySlug(a.DB, decoded)
-
+func (a *app) handleUpdateBarForm(w http.ResponseWriter, r *http.Request) {
+	barParam := chi.URLParam(r, "id")
+	barID, err := strconv.Atoi(barParam)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		generateErrorPage(w, r.Context(), "Bad Request", sessionData.Consented)
+		generateErrorPage(w, r.Context(), "Ugyldig bar-ID", true)
+		return
+	}
+
+	bar, err := database.GetBarByID(a.DB, barID)
+	if err != nil {
+		log.Fatalf("unable to fetch bar by ID: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		generateErrorPage(w, r.Context(), "Ugyldig bar-ID", true)
 		return
 	}
 
 	var hkeys []models.HappyKey
 	if bar.TimedPrices {
-		hkeys, err = database.GetHappyKeysByBarID(a.DB, bar.ID)
-
+		hkeys, err = database.GetHappyKeysByBarID(a.DB, barID)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			generateErrorPage(w, r.Context(), "Bad Request", sessionData.Consented)
-			return
+			log.Fatalf("unable to fetch hkeys for bar with ID %d: %v", barID, err)
 		}
 	}
 
-	var extra models.BarMetadata
-	if bar.LinkedBar {
-		extra, err = database.GetBarMetadata(a.DB, bar.ID)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			generateErrorPage(w, r.Context(), "Bad Request", sessionData.Consented)
-			return
-		}
-	}
+	brews := stores.AppStore.GetBreweriesData()
 
-	templ.Handler(templates.BarForm(bar, extra, hkeys)).ServeHTTP(w, r)
+	templates.Layout("Oppdater bar", true, templates.UpdateBarForm(bar, hkeys, brews)).Render(r.Context(), w)
+}
+
+func (a *app) handleUpdateBar(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		generateErrorPage(w, r.Context(), "Bad request", true)
+		return
+	}
+	decoder := form.NewDecoder()
+
+	var updatedBar models.BarUpdateForm
+	decoder.Decode(&updatedBar, r.PostForm)
+
+	fmt.Println(updatedBar)
 }

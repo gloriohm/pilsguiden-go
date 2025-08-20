@@ -29,9 +29,7 @@ func (app *app) routes() http.Handler {
 		r.Get("/create-bar", func(w http.ResponseWriter, r *http.Request) {
 			templates.Layout("Opprett bar", true, templates.BarManualForm()).Render(r.Context(), w)
 		})
-		r.Get("/update-bar", func(w http.ResponseWriter, r *http.Request) {
-			templates.Layout("Oppdater Bar", true, templates.UpdateBar()).Render(r.Context(), w)
-		})
+		r.Get("/update-bar/{id}", app.handleUpdateBarForm)
 		r.Get("/create-brewery", func(w http.ResponseWriter, r *http.Request) {
 			templates.Layout("Opprett bryggeri", true, templates.CreateBrewery()).Render(r.Context(), w)
 		})
@@ -62,8 +60,6 @@ func (app *app) routes() http.Handler {
 
 	// site-wide functionality endpoints
 	r.Get("/search", app.handleSearch)
-	r.Get("/search-bar", app.handleSearchBar)
-	r.Get("/fetch-bar", app.handleFetchBar)
 	r.Route("/logic", func(r chi.Router) {
 		r.Get("/brewery-picker", handleBreweryPicker)
 		r.Get("/consent-updater", handleConsentUpdater)
@@ -72,6 +68,7 @@ func (app *app) routes() http.Handler {
 		r.Get("/do-nothing", handleDoNothing)
 		r.Post("/confirm-price", app.handleConfirmPrice)
 		r.Post("/set-consent", handleConsent)
+		r.Post("/update-bar", app.handleUpdateBar)
 		r.Post("/update-brewery", app.handleUpdateBrewery)
 		r.Post("/update-price", app.handleUpdatePrice)
 		r.Post("/test-toast", testToast)

@@ -597,14 +597,14 @@ hk AS (
       )
 )
 SELECT 
-    b.id, b.bar, b.price, b.size, b.pint, b.price_checked,
+    b.id, b.bar, b.price, b.size, b.pint, b.price_checked, b.slug,
     b.address, b.fylke, l_fylke.name AS fylke_name, l_fylke.slug AS fylke_slug,
-    b.sted, l_kommune.name AS kommune_name, l_kommune.slug AS kommune_slug,
-    b.nabolag, l_sted.name AS sted_name, l_sted.slug AS sted_slug,
+    b.sted AS kommune, l_kommune.name AS kommune_name, l_kommune.slug AS kommune_slug,
+    b.nabolag AS sted, l_sted.name AS sted_name, l_sted.slug AS sted_slug,
     b.flyplass, b.brewery, b.latitude, b.longitude,
     CASE WHEN b.timed_prices AND hk.pint IS NOT NULL THEN hk.pint ELSE b.pint END AS current_pint,
     CASE WHEN b.timed_prices AND hk.price IS NOT NULL THEN hk.price ELSE b.price END AS current_price,
-    hk.from_time, hk.until_time, hk.price_checked AS hk_checked
+    hk.from_time, hk.until_time, hk.price_checked AS hk_checked, hk.id AS hkey_id
 FROM bars b
 LEFT JOIN hk ON b.id = hk.bar
 LEFT JOIN locations l_fylke ON l_fylke.id = b.fylke
@@ -648,4 +648,34 @@ func UpdatePricePublic(conn *pgx.Conn, p models.UpdatedPrice) error {
 	}
 
 	return nil
+}
+
+func GetBarByID(conn *pgx.Conn, id int) (models.Bar, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `
+	SELECT 
+		b.id, b.bar, b.price, b.size, b.pint, b.price_checked, b.slug,
+		b.address, b.fylke, l_fylke.name AS fylke_name, l_fylke.slug AS fylke_slug,
+		b.sted, l_kommune.name AS kommune_name, l_kommune.slug AS kommune_slug,
+		b.nabolag, l_sted.name AS sted_name, l_sted.slug AS sted_slug,
+		b.flyplass, b.brewery, b.latitude, b.longitude, b.timed_prices, b.orgnummer
+	FROM bars b
+	LEFT JOIN locations l_fylke ON l_fylke.id = b.fylke
+	LEFT JOIN locations l_kommune ON l_kommune.id = b.sted
+	LEFT JOIN locations l_sted ON l_sted.id = b.nabolag
+	WHERE b.id = $1
+	LIMIT 1
+	`
+	row := conn.QueryRow(ctx, query, id)
+
+	var bar models.Bar
+	if err := row.Scan(&bar.ID, &bar.Name, &bar.Price, &bar.Size, &bar.Pint,
+		&bar.PriceChecked, &bar.Slug, &bar.Address, &bar.Fylke, &bar.FylkeName, &bar.FylkeSlug,
+		&bar.Kommune, &bar.KommuneName, &bar.KommuneSlug, &bar.Sted, &bar.StedName,
+		&bar.StedSlug, &bar.Flyplass, &bar.Brewery, &bar.Latitude, &bar.Longitude, &bar.TimedPrices, &bar.OrgNummer); err != nil {
+		return bar, fmt.Errorf("db scan: %w", err)
+	}
+
+	return bar, nil
 }

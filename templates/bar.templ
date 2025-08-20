@@ -143,7 +143,7 @@ templ BreweryPicker(barID string, brews []models.Brewery) {
 		<p>Mangler vi bryggeriet? Send oss en mail på <a href="mailto:pilsguiden@hotmail.com" class="font-semibold">pilsguiden@hotmail.com</a></p>
 		<p>Velg bryggeri:</p>
 		<form hx-post="/logic/update-brewery" hx-target="#pop-up" hx-swap="innerHTML">
-			<select name="new_brew">
+			<select name="new_brew" class={curtain}>
 				<option disabled selected>Ikke valgt</option>
 			for _, brew := range brews {
 				<option value={brew.Name}>{brew.Name}</option>

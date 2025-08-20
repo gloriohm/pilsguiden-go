@@ -171,3 +171,17 @@ type UpdatedPrice struct {
 	PriceUpdated time.Time `db:"updated_at"`
 	PriceChecked time.Time `db:"price_checked"`
 }
+
+type BarUpdateForm struct {
+	Name        string  `db:"bar" form:"name"`
+	Price       int     `db:"price" form:"price"`
+	Size        float64 `db:"size" form:"size"`
+	Brewery     string  `db:"brewery" form:"brewery"`
+	TimedPrices bool    `db:"timed_prices" form:"timed"`
+	Address     string  `db:"address" form:"address"`
+	Latitude    float64 `db:"latitude" form:"lat"`
+	Longitude   float64 `db:"longitude" form:"lon"`
+	OrgNummer   string  `db:"orgnummer" form:"orgnummer"`
+	Slug        string  `db:"slug" form:"slug"`
+	IsActive    bool    `db:"is_active" form:"active"`
+}
