@@ -168,11 +168,12 @@ type UpdatedPrice struct {
 	Price        int       `db:"price"`
 	Size         float64   `db:"size"`
 	Pint         int       `db:"pint"`
-	PriceUpdated time.Time `db:"updated_at"`
+	PriceUpdated time.Time `db:"price_updated"`
 	PriceChecked time.Time `db:"price_checked"`
 }
 
 type BarUpdateForm struct {
+	ID          int     `form:"id"`
 	Name        string  `db:"bar" form:"name"`
 	Price       int     `db:"price" form:"price"`
 	Size        float64 `db:"size" form:"size"`
@@ -184,4 +185,13 @@ type BarUpdateForm struct {
 	OrgNummer   string  `db:"orgnummer" form:"orgnummer"`
 	Slug        string  `db:"slug" form:"slug"`
 	IsActive    bool    `db:"is_active" form:"active"`
+}
+
+type Price struct {
+	BarID        int       `db:"id"`
+	Price        int       `db:"price" form:"price"`
+	Size         float64   `db:"size" form:"size"`
+	Pint         int       `db:"pint"`
+	PriceUpdated time.Time `db:"price_updated"`
+	PriceChecked time.Time `db:"price_checked"`
 }

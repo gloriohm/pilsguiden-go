@@ -22,3 +22,9 @@ type RawCustomTime struct {
 	Time string `form:"customTime"`
 	Day  int    `form:"customDay"`
 }
+
+type UpdateBarStore struct {
+	BarID int
+	Price int
+	Size  float64
+}

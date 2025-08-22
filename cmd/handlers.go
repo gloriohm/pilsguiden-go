@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"go-router/database"
+	"go-router/internal/auth"
 	"go-router/internal/handlers"
 	"go-router/internal/stores"
 	"go-router/internal/utils"
@@ -113,7 +114,9 @@ func (a *app) handleList(w http.ResponseWriter, r *http.Request) {
 		bars, err = database.GetBarsByLocation(a.DB, current.ID, current.Name)
 	}
 	if err != nil {
-		log.Fatalf("unable to get bars: %v", err)
+		log.Printf("unable to get bars: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		generateErrorPage(w, r.Context(), "Bad request", sessionData.Consented)
 	}
 
 	nextLocations := extractNextLocs(bars, current.Name)
@@ -124,6 +127,7 @@ func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {
 	sessionData := handlers.GetSessionData(r.Context())
 	sessID := sessionData.SessionID
 	if err := r.ParseForm(); err != nil {
+		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
 		generateErrorPage(w, r.Context(), "Bad request", sessionData.Consented)
 		return
@@ -151,7 +155,7 @@ func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {
 
 	bars, err := database.GetBarsByLocationAndTime(a.DB, sessData.Navigation.ID, sessData.Navigation.Level, sessData.Preferences.Date, sessData.Preferences.Time.Format("15:04:05"))
 	if err != nil {
-		log.Fatalf("unable to get bars: %v", err)
+		log.Printf("unable to get bars: %v", err)
 	}
 	templ.Handler(templates.List(bars)).ServeHTTP(w, r)
 }
@@ -162,7 +166,7 @@ func (a *app) handleSearch(w http.ResponseWriter, r *http.Request) {
 	if len(decoded) > 2 {
 		result, err := database.GetSearchResult(a.DB, decoded)
 		if err != nil {
-			log.Fatalf("unable to get search result: %v", err)
+			log.Printf("unable to get search result: %v", err)
 		}
 
 		templ.Handler(templates.SearchResult(result)).ServeHTTP(w, r)
@@ -180,9 +184,17 @@ func (a *app) handleUpdateBarForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	v := r.Context().Value(auth.UserIDKey)
+	user, ok := v.(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		generateErrorPage(w, r.Context(), "Ugyldig user-ID", true)
+		return
+	}
+
 	bar, err := database.GetBarByID(a.DB, barID)
 	if err != nil {
-		log.Fatalf("unable to fetch bar by ID: %v", err)
+		log.Printf("unable to fetch bar by ID: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		generateErrorPage(w, r.Context(), "Ugyldig bar-ID", true)
 		return
@@ -192,9 +204,11 @@ func (a *app) handleUpdateBarForm(w http.ResponseWriter, r *http.Request) {
 	if bar.TimedPrices {
 		hkeys, err = database.GetHappyKeysByBarID(a.DB, barID)
 		if err != nil {
-			log.Fatalf("unable to fetch hkeys for bar with ID %d: %v", barID, err)
+			log.Printf("unable to fetch hkeys for bar with ID %d: %v", barID, err)
 		}
 	}
+
+	stores.SetUpdateBarStore(sessionStore, user, models.UpdateBarStore{BarID: bar.ID, Price: bar.Price, Size: bar.Size})
 
 	brews := stores.AppStore.GetBreweriesData()
 
@@ -202,7 +216,17 @@ func (a *app) handleUpdateBarForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *app) handleUpdateBar(w http.ResponseWriter, r *http.Request) {
+	v := r.Context().Value(auth.UserIDKey)
+	user, ok := v.(string)
+	if !ok {
+		log.Println("error getting user ID")
+		w.WriteHeader(http.StatusBadRequest)
+		generateErrorPage(w, r.Context(), "Ugyldig user-ID", true)
+		return
+	}
+
 	if err := r.ParseForm(); err != nil {
+		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
 		generateErrorPage(w, r.Context(), "Bad request", true)
 		return
@@ -211,6 +235,41 @@ func (a *app) handleUpdateBar(w http.ResponseWriter, r *http.Request) {
 
 	var updatedBar models.BarUpdateForm
 	decoder.Decode(&updatedBar, r.PostForm)
-
 	fmt.Println(updatedBar)
+
+	compare := stores.GetUpdateBarStore(sessionStore, user)
+
+	if compare.BarID != updatedBar.ID {
+		log.Println("Bar id does not match bar id in store")
+		w.WriteHeader(http.StatusBadRequest)
+		generateErrorPage(w, r.Context(), "Bad request", true)
+		return
+	}
+	if compare.Price != updatedBar.Price || compare.Size != updatedBar.Size {
+		newPrice := models.Price{
+			BarID:        updatedBar.ID,
+			Price:        updatedBar.Price,
+			Size:         updatedBar.Size,
+			Pint:         database.ToPint(updatedBar.Price, updatedBar.Size),
+			PriceUpdated: time.Now(),
+			PriceChecked: time.Now(),
+		}
+		if err := database.UpdateCurrentAndHistoricPrice(a.DB, newPrice); err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			generateErrorPage(w, r.Context(), "Bad request", true)
+			return
+		}
+	}
+
+	// run update other info logic
+	if err := database.UpdateBarData(a.DB, updatedBar); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		generateErrorPage(w, r.Context(), "Bad request", true)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	templ.Handler(templates.Toast("Bar oppdatert!")).ServeHTTP(w, r)
 }

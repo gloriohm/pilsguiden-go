@@ -34,6 +34,10 @@ templ UpdateBarForm(bar models.Bar, hk []models.HappyKey, brews []models.Brewery
                 </span>
             </div>
             <span>
+                <label for="timed_prices">Adresse:</label>
+                <input name="timed_prices" type="checkbox" checked={bar.TimedPrices}>
+            </span>
+            <span>
                 <label for="address">Adresse:</label>
                 <input name="address" type="text" value={bar.Address} class={input}>
             </span>
@@ -61,7 +65,7 @@ templ UpdateBarForm(bar models.Bar, hk []models.HappyKey, brews []models.Brewery
             </div>
             <div>
                 <a href={fmt.Sprintf("/bar/%s", bar.Slug)} class={btnWarning}>Tilbake</a>
-                <button hx-post="/logic/update-bar" hx-swap="none" type="submit" class={btnPrimary}>Oppdater</button>
+                <button hx-post="/admin/update-bar" hx-swap="none" type="submit" class={btnPrimary}>Oppdater</button>
             </div>
         </form>
     </div>

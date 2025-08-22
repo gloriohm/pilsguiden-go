@@ -665,7 +665,7 @@ func GetBarByID(conn *pgx.Conn, id int) (models.Bar, error) {
 	LEFT JOIN locations l_kommune ON l_kommune.id = b.sted
 	LEFT JOIN locations l_sted ON l_sted.id = b.nabolag
 	WHERE b.id = $1
-	LIMIT 1
+	LIMIT 1;
 	`
 	row := conn.QueryRow(ctx, query, id)
 
@@ -678,4 +678,119 @@ func GetBarByID(conn *pgx.Conn, id int) (models.Bar, error) {
 	}
 
 	return bar, nil
+}
+
+func GetPrice(conn *pgx.Conn, barID int) (models.Price, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `SELECT id, price, size, pint, price_updated, price_checked FROM bars WHERE id = $1 LIMIT 1`
+	row, err := conn.Query(ctx, query, barID)
+	if err != nil {
+		return models.Price{}, err
+	}
+	price, err := pgx.CollectExactlyOneRow(row, pgx.RowToStructByName[models.Price])
+
+	return price, err
+}
+
+func UpdateHistoricPrice(conn *pgx.Conn, p models.Price) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `
+		INSERT INTO price_history
+			(bar_id, price, size, pint, valid_from)
+		VALUES
+			($1, $2, $3, $4, $5);
+	`
+
+	cmdTag, err := conn.Exec(ctx, query,
+		p.BarID,
+		p.Price,
+		p.Size,
+		p.Pint,
+		p.PriceUpdated)
+
+	if err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("no rows updated")
+	}
+
+	return nil
+}
+
+func UpdatePrice(conn *pgx.Conn, p models.Price) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `
+        UPDATE bars
+        SET
+            price          = $1,
+            size           = $2,
+            pint           = $3,
+            price_updated  = $4,
+            price_checked  = $5
+        WHERE id = $6;
+    `
+
+	cmdTag, err := conn.Exec(ctx, query,
+		p.Price,
+		p.Size,
+		p.Pint,
+		p.PriceUpdated,
+		p.PriceChecked,
+		p.BarID)
+
+	if err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("no rows updated for id %d", p.BarID)
+	}
+
+	return nil
+}
+
+func UpdateBarData(conn *pgx.Conn, p models.BarUpdateForm) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `
+        UPDATE bars
+        SET
+            bar = $1,
+            brewery = $2,
+            timed_prices = $3,
+            address = $4,
+            latitude = $5,
+			longitude = $6,
+			orgnummer = $7,
+			slug = $8,
+			is_active = $9
+        WHERE id = $10;
+    `
+
+	cmdTag, err := conn.Exec(ctx, query,
+		p.Name,
+		p.Brewery,
+		p.TimedPrices,
+		p.Address,
+		p.Latitude,
+		p.Longitude,
+		p.OrgNummer,
+		p.Slug,
+		p.IsActive,
+		p.ID)
+
+	if err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("no rows updated for id %d", p.ID)
+	}
+
+	return nil
 }
