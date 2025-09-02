@@ -6,10 +6,10 @@ import (
 	"go-router/models"
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func CreateBar(conn *pgx.Conn, userInput *models.BarManual) error {
+func CreateBar(conn *pgxpool.Pool, userInput *models.BarManual) error {
 	bar := models.Bar{
 		BarManual: *userInput,
 	}
@@ -72,7 +72,7 @@ func fetchOSM(osmID string) (models.NodeDetails, models.AddressParts, error) {
 	return nodeDetails, address, nil
 }
 
-func upsertLocations(conn *pgx.Conn, adr models.AddressParts) (models.BarOSM, error) {
+func upsertLocations(conn *pgxpool.Pool, adr models.AddressParts) (models.BarOSM, error) {
 	ids := models.BarOSM{Latitude: adr.Lat, Longitude: adr.Lon}
 
 	fylke, err := GetLocationIdByName(conn, adr.Fylke, "fylke")

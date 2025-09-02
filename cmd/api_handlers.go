@@ -26,7 +26,7 @@ func (a *app) handleCreateBar(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&userInput, r.PostForm)
 	fmt.Println(r.PostForm)
 
-	err := database.CreateBar(a.DB, &userInput)
+	err := database.CreateBar(a.Pool, &userInput)
 	if err != nil {
 		msg := fmt.Sprintf("Noe gikk galt: %s", err)
 		templ.Handler(templates.Toast(msg)).ServeHTTP(w, r)
@@ -50,13 +50,13 @@ func (a *app) handleCreateBrewery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := database.CreateBrewery(a.DB, newBrew)
+	err := database.CreateBrewery(a.Pool, newBrew)
 	if err != nil {
 		http.Error(w, "could not create brewery", http.StatusBadRequest)
 		return
 	}
 
-	breweries, err := database.GetBreweries(a.DB)
+	breweries, err := database.GetBreweries(a.Pool)
 	if err != nil {
 		log.Fatalf("failed to load breweries: %v", err)
 	}
@@ -84,7 +84,7 @@ func (app *app) APIKeyMiddleware(next http.Handler) http.Handler {
 
 		var customerKey string
 		var active bool
-		err := app.DB.QueryRow(r.Context(),
+		err := app.Pool.QueryRow(r.Context(),
 			"SELECT key, active FROM api_keys WHERE key=$1", apiKey,
 		).Scan(&customerKey, &active)
 

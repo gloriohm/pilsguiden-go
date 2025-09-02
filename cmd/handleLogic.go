@@ -66,7 +66,7 @@ func (a *app) handleUpdateBrewery(w http.ResponseWriter, r *http.Request) {
 
 	brewery := r.FormValue("new_brew")
 
-	err = database.UpdateBreweryWhereUnknown(a.DB, barID, brewery)
+	err = database.UpdateBreweryWhereUnknown(a.Pool, barID, brewery)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -116,7 +116,7 @@ func (a *app) handleConfirmPrice(w http.ResponseWriter, r *http.Request) {
 	switch idType {
 	case "bar":
 		targetElementID = "regular_checked"
-		err = database.UpdatePriceChecked(a.DB, "bars", timestamp, id)
+		err = database.UpdatePriceChecked(a.Pool, "bars", timestamp, id)
 		if err != nil {
 			log.Print(err)
 			http.Error(w, "Not able to confirm price", http.StatusBadRequest)
@@ -124,7 +124,7 @@ func (a *app) handleConfirmPrice(w http.ResponseWriter, r *http.Request) {
 		}
 	case "hkey":
 		targetElementID = fmt.Sprintf("happy_checked_%s", rawID)
-		err = database.UpdatePriceChecked(a.DB, "happy_keys", timestamp, id)
+		err = database.UpdatePriceChecked(a.Pool, "happy_keys", timestamp, id)
 		if err != nil {
 			log.Print(err)
 			http.Error(w, "Not able to confirm price", http.StatusBadRequest)
@@ -184,7 +184,7 @@ func (a *app) handleUpdatePrice(w http.ResponseWriter, r *http.Request) {
 		PriceChecked: timestamp,
 	}
 
-	err = database.UpdatePricePublic(a.DB, payload)
+	err = database.UpdatePricePublic(a.Pool, payload)
 	if err != nil {
 		log.Print(err)
 		http.Error(w, "not able to update price", http.StatusBadRequest)

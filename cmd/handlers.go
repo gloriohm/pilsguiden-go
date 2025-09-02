@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"go-router/database"
 	"go-router/internal/auth"
@@ -18,33 +19,60 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi"
 	"github.com/go-playground/form"
+	"golang.org/x/sync/errgroup"
 )
 
 func (a *app) handleHome(w http.ResponseWriter, r *http.Request) {
-	sessionData := handlers.GetSessionData(r.Context())
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	sessionData := handlers.GetSessionData(ctx)
+
+	var (
+		totalBars int
+		topTen    []models.BarView
+		bottomTen []models.BarView
+		eg        errgroup.Group
+	)
+
+	eg.Go(func() error {
+		n, err := database.GetTotalBars(ctx, a.Pool)
+		if err == nil {
+			totalBars = n
+		}
+		return err
+	})
+	eg.Go(func() error {
+		t, err := database.GetTopTen(ctx, a.Pool)
+		if err == nil {
+			topTen = t
+		}
+		return err
+	})
+	eg.Go(func() error {
+		b, err := database.GetBottomTen(ctx, a.Pool)
+		if err == nil {
+			bottomTen = b
+		}
+		return err
+	})
+
 	fylker := stores.AppStore.GetFylkerData()
 	baseFylke := utils.ToBase(fylker)
-	totalBars, err := database.GetTotalBars(a.DB)
-	if err != nil || totalBars == 0 {
-		fmt.Println("Error total bars:", err)
+
+	if err := eg.Wait(); err != nil {
+		log.Printf("home: data load error: %v", err)
 		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
+		return
 	}
-	topTen, err := database.GetTopTen(a.DB)
-	if err != nil {
-		fmt.Println("Error top ten bars:", err)
-		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
-	}
-	bottomTen, err := database.GetBottomTen(a.DB)
-	if err != nil {
-		fmt.Println("Error loading bottom ten bars:", err)
-		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
-	}
-	templates.Layout("Pilsguiden", sessionData.Consented, templates.Home(totalBars, baseFylke, topTen, bottomTen)).Render(r.Context(), w)
+
+	c := templates.Layout("Pilsguiden", sessionData.Consented, templates.Home(totalBars, baseFylke, topTen, bottomTen))
+	templ.Handler(c).ServeHTTP(w, r)
 }
 
 func (a *app) handleAbout(w http.ResponseWriter, r *http.Request) {
 	sessionData := handlers.GetSessionData(r.Context())
-	data, err := database.GetAboutPageData(a.DB)
+	data, err := database.GetAboutPageData(a.Pool)
 	if err != nil {
 		fmt.Println("Error getting about info:", err)
 		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
@@ -55,7 +83,7 @@ func (a *app) handleAbout(w http.ResponseWriter, r *http.Request) {
 func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
 	sessionData := handlers.GetSessionData(r.Context())
 	barParam := chi.URLParam(r, "slug")
-	bar, err := database.GetBarBySlug(a.DB, barParam)
+	bar, err := database.GetBarBySlug(a.Pool, barParam)
 
 	if err != nil {
 		fmt.Println("Error fetching bar:", err)
@@ -69,7 +97,7 @@ func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
 
 	var hkeys []models.HappyKey
 	if bar.TimedPrices {
-		hkeys, err = database.GetHappyKeysByBarID(a.DB, bar.ID)
+		hkeys, err = database.GetHappyKeysByBarID(a.Pool, bar.ID)
 
 		if err != nil {
 			fmt.Println("Error fetching happy keys:", err)
@@ -78,7 +106,7 @@ func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
 
 	var extra models.BarMetadata
 	if bar.LinkedBar {
-		extra, err = database.GetBarMetadata(a.DB, bar.ID)
+		extra, err = database.GetBarMetadata(a.Pool, bar.ID)
 		if err != nil {
 			fmt.Println("Error fetching bar metadata:", err)
 		}
@@ -109,9 +137,9 @@ func (a *app) handleList(w http.ResponseWriter, r *http.Request) {
 	var bars []models.BarView
 	pref := stores.GetSessionData(sessionStore, sessID)
 	if pref.Preferences.CustomTime {
-		bars, err = database.GetBarsByLocationAndTime(a.DB, current.ID, current.Name, pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
+		bars, err = database.GetBarsByLocationAndTime(a.Pool, current.ID, current.Name, pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
 	} else {
-		bars, err = database.GetBarsByLocation(a.DB, current.ID, current.Name)
+		bars, err = database.GetBarsByLocation(a.Pool, current.ID, current.Name)
 	}
 	if err != nil {
 		log.Printf("unable to get bars: %v", err)
@@ -153,7 +181,7 @@ func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {
 	sessData := stores.GetSessionData(sessionStore, sessID)
 	fmt.Println(sessData.Navigation.Level)
 
-	bars, err := database.GetBarsByLocationAndTime(a.DB, sessData.Navigation.ID, sessData.Navigation.Level, sessData.Preferences.Date, sessData.Preferences.Time.Format("15:04:05"))
+	bars, err := database.GetBarsByLocationAndTime(a.Pool, sessData.Navigation.ID, sessData.Navigation.Level, sessData.Preferences.Date, sessData.Preferences.Time.Format("15:04:05"))
 	if err != nil {
 		log.Printf("unable to get bars: %v", err)
 	}
@@ -164,7 +192,7 @@ func (a *app) handleSearch(w http.ResponseWriter, r *http.Request) {
 	searchTerm := r.URL.Query().Get("search")
 	decoded, _ := url.QueryUnescape(searchTerm)
 	if len(decoded) > 2 {
-		result, err := database.GetSearchResult(a.DB, decoded)
+		result, err := database.GetSearchResult(a.Pool, decoded)
 		if err != nil {
 			log.Printf("unable to get search result: %v", err)
 		}
@@ -192,7 +220,7 @@ func (a *app) handleUpdateBarForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bar, err := database.GetBarByID(a.DB, barID)
+	bar, err := database.GetBarByID(a.Pool, barID)
 	if err != nil {
 		log.Printf("unable to fetch bar by ID: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -202,7 +230,7 @@ func (a *app) handleUpdateBarForm(w http.ResponseWriter, r *http.Request) {
 
 	var hkeys []models.HappyKey
 	if bar.TimedPrices {
-		hkeys, err = database.GetHappyKeysByBarID(a.DB, barID)
+		hkeys, err = database.GetHappyKeysByBarID(a.Pool, barID)
 		if err != nil {
 			log.Printf("unable to fetch hkeys for bar with ID %d: %v", barID, err)
 		}
@@ -254,7 +282,7 @@ func (a *app) handleUpdateBar(w http.ResponseWriter, r *http.Request) {
 			PriceUpdated: time.Now(),
 			PriceChecked: time.Now(),
 		}
-		if err := database.UpdateCurrentAndHistoricPrice(a.DB, newPrice); err != nil {
+		if err := database.UpdateCurrentAndHistoricPrice(a.Pool, newPrice); err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusBadRequest)
 			generateErrorPage(w, r.Context(), "Bad request", true)
@@ -263,7 +291,7 @@ func (a *app) handleUpdateBar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// run update other info logic
-	if err := database.UpdateBarData(a.DB, updatedBar); err != nil {
+	if err := database.UpdateBarData(a.Pool, updatedBar); err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
 		generateErrorPage(w, r.Context(), "Bad request", true)

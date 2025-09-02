@@ -5,10 +5,10 @@ import (
 	"go-router/models"
 	"log"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func InitStaticData(conn *pgx.Conn) {
+func InitStaticData(conn *pgxpool.Pool) {
 	locs, err := GetAllLocations(conn)
 	if err != nil {
 		log.Fatalf("failed to load locations: %v", err)

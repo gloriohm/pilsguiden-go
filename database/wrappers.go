@@ -3,10 +3,10 @@ package database
 import (
 	"go-router/models"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func UpdateCurrentAndHistoricPrice(conn *pgx.Conn, newPrice models.Price) error {
+func UpdateCurrentAndHistoricPrice(conn *pgxpool.Pool, newPrice models.Price) error {
 	oldPrice, err := GetPrice(conn, newPrice.BarID)
 	if err != nil {
 		return err

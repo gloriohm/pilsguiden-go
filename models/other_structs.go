@@ -1,7 +1,7 @@
 package models
 
-import "github.com/jackc/pgx/v5"
+import "github.com/jackc/pgx/v4/pgxpool"
 
 type App struct {
-	DB *pgx.Conn
+	DB *pgxpool.Pool
 }

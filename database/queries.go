@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func GetBarsByLocation(conn *pgx.Conn, id int, column string) ([]models.BarView, error) {
+func GetBarsByLocation(conn *pgxpool.Pool, id int, column string) ([]models.BarView, error) {
 	valid := utils.CheckValidLocationLevel(column)
 	if !valid {
 		return nil, fmt.Errorf("unsupported column %q", column)
@@ -35,7 +36,7 @@ func GetBarsByLocation(conn *pgx.Conn, id int, column string) ([]models.BarView,
 	return bars, nil
 }
 
-func GetBarsByLocationAndTime(conn *pgx.Conn, id int, column, date, customTime string) ([]models.BarView, error) {
+func GetBarsByLocationAndTime(conn *pgxpool.Pool, id int, column, date, customTime string) ([]models.BarView, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -57,7 +58,7 @@ func GetBarsByLocationAndTime(conn *pgx.Conn, id int, column, date, customTime s
 }
 
 // Get single bar
-func GetBarBySlug(conn *pgx.Conn, slug string) (*models.Bar, error) {
+func GetBarBySlug(conn *pgxpool.Pool, slug string) (*models.Bar, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
@@ -88,7 +89,7 @@ func GetBarBySlug(conn *pgx.Conn, slug string) (*models.Bar, error) {
 	return &bar, nil
 }
 
-func GetAboutPageData(conn *pgx.Conn) (*models.AboutInfo, error) {
+func GetAboutPageData(conn *pgxpool.Pool) (*models.AboutInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT COUNT(*) AS total, MIN(current_pint), MAX(current_pint) FROM current_bars_view`
@@ -104,7 +105,7 @@ func GetAboutPageData(conn *pgx.Conn) (*models.AboutInfo, error) {
 }
 
 // Get locations by hierarchy queries
-func GetFylker(conn *pgx.Conn) ([]models.Location, error) {
+func GetFylker(conn *pgxpool.Pool) ([]models.Location, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var fylker []models.Location
@@ -129,7 +130,7 @@ func GetFylker(conn *pgx.Conn) ([]models.Location, error) {
 	return fylker, nil
 }
 
-func GetKommuner(conn *pgx.Conn) ([]models.Location, error) {
+func GetKommuner(conn *pgxpool.Pool) ([]models.Location, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var kommuner []models.Location
@@ -154,7 +155,7 @@ func GetKommuner(conn *pgx.Conn) ([]models.Location, error) {
 	return kommuner, nil
 }
 
-func GetSteder(conn *pgx.Conn) ([]models.Location, error) {
+func GetSteder(conn *pgxpool.Pool) ([]models.Location, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var steder []models.Location
@@ -180,9 +181,7 @@ func GetSteder(conn *pgx.Conn) ([]models.Location, error) {
 }
 
 // Statistical Queries
-func GetTotalBars(conn *pgx.Conn) (int, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func GetTotalBars(ctx context.Context, conn *pgxpool.Pool) (int, error) {
 	query := `SELECT COUNT(*) AS total FROM current_bars`
 	row := conn.QueryRow(ctx, query)
 
@@ -193,10 +192,7 @@ func GetTotalBars(conn *pgx.Conn) (int, error) {
 	return total, nil
 }
 
-func GetTopTen(conn *pgx.Conn) ([]models.BarView, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func GetTopTen(ctx context.Context, conn *pgxpool.Pool) ([]models.BarView, error) {
 	query := `SELECT * FROM current_bars ORDER BY current_pint ASC LIMIT 10`
 	rows, err := conn.Query(ctx, query)
 	if err != nil {
@@ -213,10 +209,7 @@ func GetTopTen(conn *pgx.Conn) ([]models.BarView, error) {
 	return bars, nil
 }
 
-func GetBottomTen(conn *pgx.Conn) ([]models.BarView, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func GetBottomTen(ctx context.Context, conn *pgxpool.Pool) ([]models.BarView, error) {
 	query := `SELECT * FROM current_bars ORDER BY current_pint DESC LIMIT 10`
 	rows, err := conn.Query(ctx, query)
 	if err != nil {
@@ -233,7 +226,7 @@ func GetBottomTen(conn *pgx.Conn) ([]models.BarView, error) {
 	return bars, nil
 }
 
-func GetBreweries(conn *pgx.Conn) ([]models.Brewery, error) {
+func GetBreweries(conn *pgxpool.Pool) ([]models.Brewery, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var breweries []models.Brewery
@@ -259,7 +252,7 @@ func GetBreweries(conn *pgx.Conn) ([]models.Brewery, error) {
 	return breweries, nil
 }
 
-func GetLocationIdByName(conn *pgx.Conn, name, level string) (int, error) {
+func GetLocationIdByName(conn *pgxpool.Pool, name, level string) (int, error) {
 	validLvl := utils.CheckValidLocationLevel(level)
 	if !validLvl {
 		return 0, errors.New("not a valid location level")
@@ -280,7 +273,7 @@ func GetLocationIdByName(conn *pgx.Conn, name, level string) (int, error) {
 	return loc, nil
 }
 
-func CreateNewLocation(conn *pgx.Conn, loc models.Location) (int, error) {
+func CreateNewLocation(conn *pgxpool.Pool, loc models.Location) (int, error) {
 	validLvl := utils.CheckValidLocationLevel(loc.Hierarchy)
 	if !validLvl {
 		return 0, errors.New("not a valid location level")
@@ -301,7 +294,7 @@ func CreateNewLocation(conn *pgx.Conn, loc models.Location) (int, error) {
 	return id, nil
 }
 
-func CreateNewBar(conn *pgx.Conn, bar models.Bar) (int, error) {
+func CreateNewBar(conn *pgxpool.Pool, bar models.Bar) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `INSERT INTO bars (name, address, flyplass, price, size, brewery, orgnummer, osm_id, linked_bar, pint, slug, price_updated, price_checked, is_active, timed_prices, fylke, kommune, sted, latitude, longitude) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING id`
@@ -316,7 +309,7 @@ func CreateNewBar(conn *pgx.Conn, bar models.Bar) (int, error) {
 	return id, nil
 }
 
-func CreateBarMetadata(conn *pgx.Conn, meta models.BarMetadata) {
+func CreateBarMetadata(conn *pgxpool.Pool, meta models.BarMetadata) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -325,7 +318,7 @@ func CreateBarMetadata(conn *pgx.Conn, meta models.BarMetadata) {
 	conn.QueryRow(ctx, query, meta.BarID, meta.LastOSMSync, meta.Cuisine, meta.OpeningHours, meta.Wheelchair, meta.Website, meta.Email, meta.Phone, meta.Facebook, meta.Instagram)
 }
 
-func GetOrgID(conn *pgx.Conn, table, orgnum string) (int, error) {
+func GetOrgID(conn *pgxpool.Pool, table, orgnum string) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -345,7 +338,7 @@ func GetOrgID(conn *pgx.Conn, table, orgnum string) (int, error) {
 	return id, nil
 }
 
-func CreateHovedenhet(conn *pgx.Conn, data models.Hovedenhet) error {
+func CreateHovedenhet(conn *pgxpool.Pool, data models.Hovedenhet) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -359,7 +352,7 @@ func CreateHovedenhet(conn *pgx.Conn, data models.Hovedenhet) error {
 	return nil
 }
 
-func CreateUnderenhet(conn *pgx.Conn, data models.Underenhet) error {
+func CreateUnderenhet(conn *pgxpool.Pool, data models.Underenhet) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -373,7 +366,7 @@ func CreateUnderenhet(conn *pgx.Conn, data models.Underenhet) error {
 	return nil
 }
 
-func GetBarMetadata(conn *pgx.Conn, barID int) (models.BarMetadata, error) {
+func GetBarMetadata(conn *pgxpool.Pool, barID int) (models.BarMetadata, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -388,7 +381,7 @@ func GetBarMetadata(conn *pgx.Conn, barID int) (models.BarMetadata, error) {
 	return meta, nil
 }
 
-func GetAllLocations(conn *pgx.Conn) ([]models.Location, error) {
+func GetAllLocations(conn *pgxpool.Pool) ([]models.Location, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var locs []models.Location
@@ -415,7 +408,7 @@ func GetAllLocations(conn *pgx.Conn) ([]models.Location, error) {
 	return locs, nil
 }
 
-func GetHappyKeysByBarID(conn *pgx.Conn, barID int) ([]models.HappyKey, error) {
+func GetHappyKeysByBarID(conn *pgxpool.Pool, barID int) ([]models.HappyKey, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var hkeys []models.HappyKey
@@ -441,7 +434,7 @@ func GetHappyKeysByBarID(conn *pgx.Conn, barID int) ([]models.HappyKey, error) {
 	return hkeys, nil
 }
 
-func CreateBrewery(conn *pgx.Conn, newBrew string) error {
+func CreateBrewery(conn *pgxpool.Pool, newBrew string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -453,7 +446,7 @@ func CreateBrewery(conn *pgx.Conn, newBrew string) error {
 	return err
 }
 
-func UpdatePriceChecked(conn *pgx.Conn, table string, newTime time.Time, id int) error {
+func UpdatePriceChecked(conn *pgxpool.Pool, table string, newTime time.Time, id int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -478,7 +471,7 @@ func UpdatePriceChecked(conn *pgx.Conn, table string, newTime time.Time, id int)
 	return nil
 }
 
-func GetSearchResult(conn *pgx.Conn, keyword string) ([]models.SearchResult, error) {
+func GetSearchResult(conn *pgxpool.Pool, keyword string) ([]models.SearchResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var results []models.SearchResult
@@ -529,7 +522,7 @@ func GetSearchResult(conn *pgx.Conn, keyword string) ([]models.SearchResult, err
 	return results, nil
 }
 
-func UpdateBreweryWhereUnknown(conn *pgx.Conn, bar int, brew string) error {
+func UpdateBreweryWhereUnknown(conn *pgxpool.Pool, bar int, brew string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `UPDATE bars SET brewery = $1 WHERE id = $2 AND (brewery IS NULL OR brewery = 'Ukjent');`
@@ -545,7 +538,7 @@ func UpdateBreweryWhereUnknown(conn *pgx.Conn, bar int, brew string) error {
 	return nil
 }
 
-func GetBarSearchResult(conn *pgx.Conn, keyword string) ([]models.SearchResult, error) {
+func GetBarSearchResult(conn *pgxpool.Pool, keyword string) ([]models.SearchResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var results []models.SearchResult
@@ -621,7 +614,7 @@ WHERE b.is_active IS true
 ORDER BY current_pint ASC
 `
 
-func UpdatePricePublic(conn *pgx.Conn, p models.UpdatedPrice) error {
+func UpdatePricePublic(conn *pgxpool.Pool, p models.UpdatedPrice) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -650,7 +643,7 @@ func UpdatePricePublic(conn *pgx.Conn, p models.UpdatedPrice) error {
 	return nil
 }
 
-func GetBarByID(conn *pgx.Conn, id int) (models.Bar, error) {
+func GetBarByID(conn *pgxpool.Pool, id int) (models.Bar, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
@@ -680,7 +673,7 @@ func GetBarByID(conn *pgx.Conn, id int) (models.Bar, error) {
 	return bar, nil
 }
 
-func GetPrice(conn *pgx.Conn, barID int) (models.Price, error) {
+func GetPrice(conn *pgxpool.Pool, barID int) (models.Price, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `SELECT id, price, size, pint, price_updated, price_checked FROM bars WHERE id = $1 LIMIT 1`
@@ -693,7 +686,7 @@ func GetPrice(conn *pgx.Conn, barID int) (models.Price, error) {
 	return price, err
 }
 
-func UpdateHistoricPrice(conn *pgx.Conn, p models.Price) error {
+func UpdateHistoricPrice(conn *pgxpool.Pool, p models.Price) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
@@ -721,7 +714,7 @@ func UpdateHistoricPrice(conn *pgx.Conn, p models.Price) error {
 	return nil
 }
 
-func UpdatePrice(conn *pgx.Conn, p models.Price) error {
+func UpdatePrice(conn *pgxpool.Pool, p models.Price) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
@@ -754,7 +747,7 @@ func UpdatePrice(conn *pgx.Conn, p models.Price) error {
 	return nil
 }
 
-func UpdateBarData(conn *pgx.Conn, p models.BarUpdateForm) error {
+func UpdateBarData(conn *pgxpool.Pool, p models.BarUpdateForm) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	query := `
