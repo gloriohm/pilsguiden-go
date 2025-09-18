@@ -34,8 +34,10 @@ templ UpdateBarForm(bar models.Bar, hk []models.HappyKey, brews []models.Brewery
                 </span>
             </div>
             <span>
-                <label for="timed_prices">Adresse:</label>
-                <input name="timed_prices" type="checkbox" checked={bar.TimedPrices}>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <span>Tidsbestemte priser:</span>
+                    <input name="timed_prices" type="checkbox" checked?={bar.TimedPrices}>
+                </label>
             </span>
             <span>
                 <label for="address">Adresse:</label>
@@ -59,10 +61,6 @@ templ UpdateBarForm(bar models.Bar, hk []models.HappyKey, brews []models.Brewery
                 <label for="slug">Pilsguiden-url:</label>
                 <input name="slug" type="text" value={bar.Slug} class={input}>
             </span>
-            <div class="flex gap-2">
-                <label for="active">(De)aktiver:</label>
-                <input name="active" type="checkbox" checked={bar.IsActive}>
-            </div>
             <div>
                 <a href={fmt.Sprintf("/bar/%s", bar.Slug)} class={btnWarning}>Tilbake</a>
                 <button hx-post="/admin/update-bar" hx-swap="none" type="submit" class={btnPrimary}>Oppdater</button>
