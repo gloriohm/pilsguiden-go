@@ -10,25 +10,32 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type BarsFilter struct {
-	Order     int
-	Breweries []string
-	MaxPrice  *int
-	MinPrice  *int
-}
-
-func createFilteredQuery(f BarsFilter) (string, []any) {
-	query := "SELECT * FROM bars WHERE 1=1"
+func createFilteredQuery(f models.BarsFilter) (string, []any) {
+	query := ""
 	args := []any{}
 	i := 1
 
 	if f.MaxPrice != nil {
 		query += fmt.Sprintf(" AND current_pint <= $%d", i)
+		i++
 	}
+
+	if f.MaxPrice != nil {
+		query += fmt.Sprintf(" AND current_pint >= $%d", i)
+		i++
+	}
+
+	if len(f.Breweries) >= 1 {
+		query += fmt.Sprintf(" AND brewery = ANY($%d)", i)
+		i++
+	}
+
+	query += setSortOrder(f)
+
 	return query, args
 }
 
-func setSortOrder(f BarsFilter) string {
+func setSortOrder(f models.BarsFilter) string {
 	switch f.Order {
 	case 0:
 		return " ORDER BY current_pint ASC"
@@ -43,10 +50,12 @@ func setSortOrder(f BarsFilter) string {
 	}
 }
 
-func GetBars(ctx context.Context, pool *pgxpool.Pool, f BarsFilter) ([]models.BarView, error) {
+func GetBars(ctx context.Context, pool *pgxpool.Pool, f models.BarsFilter) ([]models.BarView, error) {
 	query := "SELECT * FROM bars WHERE 1=1"
 	filter, args := createFilteredQuery(f)
 	query += filter
+
+	fmt.Println(query)
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()

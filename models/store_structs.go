@@ -16,6 +16,7 @@ type Navigation struct {
 type SessionData struct {
 	Navigation  Navigation
 	Preferences Preferences
+	BarsFilter  BarsFilter
 }
 
 type RawCustomTime struct {
@@ -27,4 +28,11 @@ type UpdateBarStore struct {
 	BarID int
 	Price int
 	Size  float64
+}
+
+type BarsFilter struct {
+	Order     int
+	Breweries []string
+	MaxPrice  *int
+	MinPrice  *int
 }
