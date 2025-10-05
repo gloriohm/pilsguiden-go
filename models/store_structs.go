@@ -13,7 +13,7 @@ type Navigation struct {
 	ID    int
 }
 
-type SessionData struct {
+type SessionStore struct {
 	Navigation  Navigation
 	Preferences Preferences
 	BarsFilter  BarsFilter

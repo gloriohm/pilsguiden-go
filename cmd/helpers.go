@@ -94,3 +94,7 @@ func extractNextLocs(bars []models.BarView, lvl string) []models.BaseLocation {
 
 	return locs
 }
+
+func updateBarsFilterStore(sessID string) error {
+
+}

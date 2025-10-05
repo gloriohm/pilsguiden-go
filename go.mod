@@ -4,7 +4,7 @@ go 1.23.4
 
 require github.com/go-chi/chi v1.5.5
 
-require github.com/a-h/templ v0.3.906
+require github.com/a-h/templ v0.3.943
 
 require (
 	github.com/MicahParks/keyfunc/v3 v3.4.0
@@ -14,7 +14,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/joho/godotenv v1.5.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	golang.org/x/sync v0.14.0
+	golang.org/x/sync v0.16.0
 	golang.org/x/text v0.25.0
 )
 

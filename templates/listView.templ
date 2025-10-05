@@ -11,11 +11,11 @@ templ ListView(url models.UrlNav, locs []models.BaseLocation, bars []models.BarV
     </section>
 }
 
-templ Filters(prefs models.SessionData, brews []models.Brewery, minPrice, maxPrice int) {
+templ Filters(prefs models.SessionStore, brews []models.Brewery, minPrice, maxPrice int) {
     <ul class="flex gap-1">
         <li>
             <label for="sort-selector">Sortering:</label>
-            <select id="sort-selector" name="sort" class={curtain} hx-trigger="change" hx-get="/">
+            <select id="sort-selector" name="sort" class={curtain} hx-trigger="change" hx-get="/logic/update-filter">
                 <option selected value="price_asc">Pris lav -> høy</option>
                 <option value="price_dec">Pris høy -> lav</option>
                 <option value="alpha_asc">Bar a -> å</option>

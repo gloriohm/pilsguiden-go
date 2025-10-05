@@ -135,7 +135,7 @@ func (a *app) handleList(w http.ResponseWriter, r *http.Request) {
 	stores.SetNavData(sessionStore, sessID, navStore)
 
 	var bars []models.BarView
-	pref := stores.GetSessionData(sessionStore, sessID)
+	pref := stores.GetSessionStore(sessionStore, sessID)
 	if pref.Preferences.CustomTime {
 		bars, err = database.GetBarsByLocationAndTime(a.Pool, current.ID, current.Name, pref.Preferences.Date, pref.Preferences.Time.Format("15:04:05"))
 	} else {
@@ -149,6 +149,20 @@ func (a *app) handleList(w http.ResponseWriter, r *http.Request) {
 
 	nextLocations := extractNextLocs(bars, current.Name)
 	templates.Layout("List", consented, templates.ListView(nav, nextLocations, bars)).Render(r.Context(), w)
+}
+
+func (a *app) handleFilterUpdate(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	sessionData := handlers.GetSessionData(r.Context())
+	sessID := sessionData.SessionID
+
+	userPrefs := stores.GetSessionStore(sessionStore, sessID)
+	bars, err := database.GetBars(ctx, a.Pool, userPrefs.BarsFilter)
+	if err != nil {
+		log.Printf("unable to get bars: %v", err)
+	}
+	templ.Handler(templates.List(bars)).ServeHTTP(w, r)
 }
 
 func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {
@@ -178,7 +192,7 @@ func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {
 
 	stores.SetSessionPrefs(sessionStore, sessID, pref)
 
-	sessData := stores.GetSessionData(sessionStore, sessID)
+	sessData := stores.GetSessionStore(sessionStore, sessID)
 	fmt.Println(sessData.Navigation.Level)
 
 	bars, err := database.GetBarsByLocationAndTime(a.Pool, sessData.Navigation.ID, sessData.Navigation.Level, sessData.Preferences.Date, sessData.Preferences.Time.Format("15:04:05"))

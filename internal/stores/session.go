@@ -8,31 +8,37 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-func GetSessionData(store *cache.Cache, sessionID string) models.SessionData {
+func GetSessionStore(store *cache.Cache, sessionID string) models.SessionStore {
 	if sess, found := store.Get(sessionID); found {
-		if data, ok := sess.(models.SessionData); ok {
+		if data, ok := sess.(models.SessionStore); ok {
 			return data
 		}
 	}
 
-	return models.SessionData{}
+	return models.SessionStore{}
 }
 
-func SetSessionData(store *cache.Cache, sessionID string, data models.SessionData) {
+func SetSessionStore(store *cache.Cache, sessionID string, data models.SessionStore) {
 	store.Set(sessionID, data, cache.DefaultExpiration)
 	fmt.Printf("session stored with id %s and data %v \n", sessionID, data)
 }
 
 func SetNavData(store *cache.Cache, sessionID string, data models.Navigation) {
-	sess := GetSessionData(store, sessionID)
+	sess := GetSessionStore(store, sessionID)
 	sess.Navigation = data
-	SetSessionData(store, sessionID, sess)
+	SetSessionStore(store, sessionID, sess)
 }
 
 func SetSessionPrefs(store *cache.Cache, sessionID string, data models.Preferences) {
-	sess := GetSessionData(store, sessionID)
+	sess := GetSessionStore(store, sessionID)
 	sess.Preferences = data
-	SetSessionData(store, sessionID, sess)
+	SetSessionStore(store, sessionID, sess)
+}
+
+func SetSessionFilter(store *cache.Cache, sessionID string, data models.BarsFilter) {
+	sess := GetSessionStore(store, sessionID)
+	sess.BarsFilter = data
+	SetSessionStore(store, sessionID, sess)
 }
 
 func GetClosestDate(day int) string {
