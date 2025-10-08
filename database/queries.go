@@ -787,3 +787,23 @@ func UpdateBarData(conn *pgxpool.Pool, p models.BarUpdateForm) error {
 
 	return nil
 }
+
+func GetPendingPrices(ctx context.Context, pool *pgxpool.Pool) ([]models.UpdatedPrice, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	query := `SELECT target_id, target_table, price, size, pint, price_updated, price_checked FROM price_control ORDER BY created_at DESC`
+
+	rows, err := pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	prices, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.UpdatedPrice])
+
+	if err != nil {
+		return nil, fmt.Errorf("iterating rows: %w", err)
+	}
+
+	return prices, nil
+}

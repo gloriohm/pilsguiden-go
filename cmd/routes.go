@@ -33,6 +33,7 @@ func (app *app) routes() http.Handler {
 		r.Get("/create-brewery", func(w http.ResponseWriter, r *http.Request) {
 			templates.Layout("Opprett bryggeri", true, templates.CreateBrewery()).Render(r.Context(), w)
 		})
+		r.Get("/dashboard", app.handleAdminDashboard)
 		r.Post("/update-bar", app.handleUpdateBar)
 	})
 
@@ -67,6 +68,7 @@ func (app *app) routes() http.Handler {
 		r.Get("/price-confirmer", handlePriceConfirmer)
 		r.Get("/price-updater", handlePriceUpdater)
 		r.Get("/do-nothing", handleDoNothing)
+		r.Get("/update-filter", app.handleFilterUpdate)
 		r.Post("/confirm-price", app.handleConfirmPrice)
 		r.Post("/set-consent", handleConsent)
 		r.Post("/update-brewery", app.handleUpdateBrewery)
