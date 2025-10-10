@@ -163,13 +163,11 @@ type User struct {
 }
 
 type UpdatedPrice struct {
-	TargetID     int       `db:"target_id"`
-	TargetTable  string    `db:"target_table"`
-	Price        int       `db:"price"`
-	Size         float64   `db:"size"`
-	Pint         int       `db:"pint"`
-	PriceUpdated time.Time `db:"price_updated"`
-	PriceChecked time.Time `db:"price_checked"`
+	TargetID      int       `db:"target_id"`
+	Price         int       `db:"price"`
+	Size          float64   `db:"size"`
+	Pint          int       `db:"pint"`
+	PriceReported time.Time `db:"price_checked"`
 }
 
 type BarUpdateForm struct {

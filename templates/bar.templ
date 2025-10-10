@@ -80,13 +80,13 @@ templ BarPage(bar *models.Bar, hkeys []models.HappyKey, extra models.BarMetadata
 			<p>Pris sjekket: <span id={"regular_checked"}>{FormatNorwegianDate(bar.PriceChecked)}</span></p>
 			<button
 				class={btnPrimary}
-				hx-get={fmt.Sprintf("/logic/price-confirmer?type=bar&id=%d", bar.ID)}
+				hx-get={fmt.Sprintf("/logic/price-confirmer?id=%d", bar.ID)}
 				hx-swap="innerHTML"
 				hx-target="#pop-up"
 			>Prisen stemmer</button>
 			<button
 				class={btnSecondary}
-				hx-get={fmt.Sprintf("/logic/price-updater?type=bar&id=%d&size=%s", bar.ID, strconv.FormatFloat(bar.Size, 'f', 1, 64))}
+				hx-get={fmt.Sprintf("/logic/price-updater?id=%d&size=%s", bar.ID, strconv.FormatFloat(bar.Size, 'f', 1, 64))}
 				hx-swap="innerHTML"
 				hx-target="#pop-up"
 			>Prisen er feil</button>
@@ -117,7 +117,7 @@ templ BarPage(bar *models.Bar, hkeys []models.HappyKey, extra models.BarMetadata
 								<p>Pris sjekket: <span id={"happy_checked_" + strconv.Itoa(int(hkey.ID))}>{FormatNorwegianDate(hkey.PriceChecked)}</span></p>
 								<button
 									class={btnPrimary}
-									hx-get={"/logic/price-confirmer?type=hkey&id=" + strconv.Itoa(int(hkey.ID))}
+									hx-get={"/logic/price-confirmer?id=" + strconv.Itoa(int(hkey.ID))}
 									hx-swap="innerHTML"
 									hx-target="#pop-up"
 								>Prisen stemmer</button>
@@ -161,7 +161,7 @@ templ BreweryPicker(barID string, brews []models.Brewery) {
     </div>
 }
 
-templ PriceUpdater(updateType, id, size string) {
+templ PriceUpdater(id, size string) {
 	<div class={popupContainer} id="price-updater">
 		<p>Har baren oppdatert prisen? Hjelp oss med å holde siden oppdatert!</p>
 		<p>Skriv inn prisen du betalte, så tar vi oss av konverteringen til halvliterspris
@@ -179,12 +179,12 @@ templ PriceUpdater(updateType, id, size string) {
 				hx-target="#pop-up"
 				hx-swap="innerHTML"
 			>Avbryt</button>
-			<button type="submit" name="update_target" value={updateType + ":" + id} class={btnPrimary}>Oppdater</button>
+			<button type="submit" name="update_target" value={id} class={btnPrimary}>Oppdater</button>
 		</form>
 	</div>
 }
 
-templ PriceConfirmer(updateType, id string) {
+templ PriceConfirmer(id string) {
 	<div class={popupContainer} id="price-confirmer">
 		<p>Har baren fortsatt samme pris? Hjelp oss med å holde siden oppdatert ved å bekrefte at prisen fortsatt stemmer!</p>
 		<button
@@ -198,7 +198,7 @@ templ PriceConfirmer(updateType, id string) {
 			class={btnPrimary}
 			type="submit"
 			name="update_target"
-			value={updateType + ":" + id}
+			value={id}
 			hx-post="/logic/confirm-price"
 			hx-target="#pop-up"
 			hx-swap="innerHTML"

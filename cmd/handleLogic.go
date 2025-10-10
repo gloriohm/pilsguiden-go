@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"go-router/database"
 	"go-router/internal/stores"
 	"go-router/models"
@@ -9,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/a-h/templ"
@@ -80,18 +78,16 @@ func testToast(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlePriceConfirmer(w http.ResponseWriter, r *http.Request) {
-	idType := r.URL.Query().Get("type")
 	id := r.URL.Query().Get("id")
 
-	templ.Handler(templates.PriceConfirmer(idType, id)).ServeHTTP(w, r)
+	templ.Handler(templates.PriceConfirmer(id)).ServeHTTP(w, r)
 }
 
 func handlePriceUpdater(w http.ResponseWriter, r *http.Request) {
-	idType := r.URL.Query().Get("type")
 	id := r.URL.Query().Get("id")
 	size := r.URL.Query().Get("size")
 
-	templ.Handler(templates.PriceUpdater(idType, id, size)).ServeHTTP(w, r)
+	templ.Handler(templates.PriceUpdater(id, size)).ServeHTTP(w, r)
 }
 
 func (a *app) handleConfirmPrice(w http.ResponseWriter, r *http.Request) {
@@ -100,10 +96,7 @@ func (a *app) handleConfirmPrice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	target := r.FormValue("update_target")
-	parts := strings.Split(target, ":")
-	idType := parts[0]
-	rawID := parts[1]
-	id, err := strconv.Atoi(rawID)
+	id, err := strconv.Atoi(target)
 
 	if err != nil {
 		http.Error(w, "Id not of type int", http.StatusBadRequest)
@@ -112,31 +105,15 @@ func (a *app) handleConfirmPrice(w http.ResponseWriter, r *http.Request) {
 
 	timestamp := time.Now()
 
-	var targetElementID string
-	switch idType {
-	case "bar":
-		targetElementID = "regular_checked"
-		err = database.UpdatePriceChecked(a.Pool, "bars", timestamp, id)
-		if err != nil {
-			log.Print(err)
-			http.Error(w, "Not able to confirm price", http.StatusBadRequest)
-			return
-		}
-	case "hkey":
-		targetElementID = fmt.Sprintf("happy_checked_%s", rawID)
-		err = database.UpdatePriceChecked(a.Pool, "happy_keys", timestamp, id)
-		if err != nil {
-			log.Print(err)
-			http.Error(w, "Not able to confirm price", http.StatusBadRequest)
-			return
-		}
-	default:
-		http.Error(w, "Not of type bar or hkey", http.StatusBadRequest)
+	err = database.UpdatePriceChecked(a.Pool, timestamp, id)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Not able to confirm price", http.StatusBadRequest)
 		return
 	}
 
+	targetElementID := "checked" + target
 	timeString := templates.FormatNorwegianDate(timestamp)
-
 	templ.Handler(templates.UpdateInterface("Pris bekreftet! \nTakk for at du bidrar 🍻", timeString, targetElementID)).ServeHTTP(w, r)
 }
 
@@ -146,10 +123,7 @@ func (a *app) handleUpdatePrice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	target := r.FormValue("update_target")
-	parts := strings.Split(target, ":")
-	idType := parts[0]
-	rawID := parts[1]
-	id, err := strconv.Atoi(rawID)
+	id, err := strconv.Atoi(target)
 
 	if err != nil {
 		http.Error(w, "Id not of type int", http.StatusBadRequest)
@@ -175,13 +149,11 @@ func (a *app) handleUpdatePrice(w http.ResponseWriter, r *http.Request) {
 	timestamp := time.Now()
 
 	payload := models.UpdatedPrice{
-		TargetID:     id,
-		TargetTable:  idType,
-		Price:        newPrice,
-		Size:         size,
-		Pint:         newPint,
-		PriceUpdated: timestamp,
-		PriceChecked: timestamp,
+		TargetID:      id,
+		Price:         newPrice,
+		Size:          size,
+		Pint:          newPint,
+		PriceReported: timestamp,
 	}
 
 	err = database.UpdatePricePublic(a.Pool, payload)

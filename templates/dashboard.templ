@@ -14,8 +14,6 @@ templ Dashboard(pendingPrices []models.UpdatedPrice) {
 			<table class="min-w-full divide-y divide-gray-200">
 				<thead class="bg-gray-50">
 					<tr>
-                        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider">Avvis</th>
-						<th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider">Vanlig/Happy</th>
 						<th class="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wider">Pris</th>
 						<th class="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wider">Str.</th>
 						<th class="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wider">Halvliter</th>
@@ -26,14 +24,10 @@ templ Dashboard(pendingPrices []models.UpdatedPrice) {
 				<tbody class="divide-y divide-gray-100 bg-white">
 					for i, p := range pendingPrices {
 						<tr class="odd:bg-white even:bg-gray-50" id={"row-" + strconv.Itoa(int(i))}>
-                            <td class="px-4 py-2 text-sm">
-                                <button class={btnWarning}>Avvis</button>
-                            </td>
-							<td class="px-4 py-2 text-sm">{p.TargetTable}</td>
 							<td class="px-4 py-2 text-right text-sm">{p.Price}</td>
 							<td class="px-4 py-2 text-right text-sm">{fmt.Sprintf("%.1f", p.Size)}</td>
 							<td class="px-4 py-2 text-right text-sm">{p.Pint}</td>
-							<td class="px-4 py-2 text-sm">{p.PriceUpdated.Format("2006-01-02 15:04")}</td>
+							<td class="px-4 py-2 text-sm">{p.PriceReported.Format("2006-01-02 15:04")}</td>
                             <td class="px-4 py-2 text-sm">
                                 <button class={btnPrimary}>Godkjenn</button>
                             </td>

@@ -446,19 +446,11 @@ func CreateBrewery(conn *pgxpool.Pool, newBrew string) error {
 	return err
 }
 
-func UpdatePriceChecked(conn *pgxpool.Pool, table string, newTime time.Time, id int) error {
+func UpdatePriceChecked(conn *pgxpool.Pool, newTime time.Time, id int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	allowedTables := map[string]bool{
-		"bars":       true,
-		"happy_keys": true,
-	}
-	if !allowedTables[table] {
-		return fmt.Errorf("invalid table name")
-	}
-
-	query := fmt.Sprintf("UPDATE %s SET price_checked = $1 WHERE id = $2", table)
+	query := `UPDATE prices SET price_checked = $1 WHERE is = $2`
 	cmdTag, err := conn.Exec(ctx, query, newTime, id)
 	if err != nil {
 		return fmt.Errorf("update failed: %w", err)
@@ -620,18 +612,17 @@ func UpdatePricePublic(conn *pgxpool.Pool, p models.UpdatedPrice) error {
 
 	const query = `
 		INSERT INTO price_control
-			(target_id, target_table, price, size, pint, price_updated, price_checked)
+			(target_id, price, size, pint, price_reported)
 		VALUES
-			($1, $2, $3, $4, $5, $6, $7);
+			($1, $2, $3, $4, $5);
 	`
 
-	cmdTag, err := conn.Exec(ctx, query, p.TargetID,
-		p.TargetTable,
+	cmdTag, err := conn.Exec(ctx, query,
+		p.TargetID,
 		p.Price,
 		p.Size,
 		p.Pint,
-		p.PriceUpdated,
-		p.PriceChecked)
+		p.PriceReported)
 	if err != nil {
 		return fmt.Errorf("update failed: %w", err)
 	}
