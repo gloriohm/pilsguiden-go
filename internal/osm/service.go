@@ -1,7 +1,6 @@
 package osm
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,7 +11,7 @@ import (
 	"time"
 )
 
-func GetBarLocationData(ctx context.Context, osmID string) (nodeDetails, addressParts, error) {
+func GetBarLocationData(osmID string) (NodeDetails, AddressParts, error) {
 	// fetch location and bar details from OSM based on OSM Node
 	nodeDetails, address, err := fetchBarByNode(osmID)
 	if err != nil {
@@ -23,9 +22,9 @@ func GetBarLocationData(ctx context.Context, osmID string) (nodeDetails, address
 }
 
 // Returns raw response from OSM and the address parts used for upserting locations
-func fetchBarByNode(osmNode string) (nodeDetails, addressParts, error) {
-	var node nodeDetails
-	var addr addressParts
+func fetchBarByNode(osmNode string) (NodeDetails, AddressParts, error) {
+	var node NodeDetails
+	var addr AddressParts
 
 	url := fmt.Sprintf("https://nominatim.openstreetmap.org/lookup?osm_ids=%s&format=json&extratags=1", osmNode)
 	log.Println("fetching from:", url)
@@ -36,7 +35,7 @@ func fetchBarByNode(osmNode string) (nodeDetails, addressParts, error) {
 	}
 	defer resp.Body.Close()
 
-	var data []nodeDetails
+	var data []NodeDetails
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return node, addr, fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -77,7 +76,7 @@ func apiResponse(url string) (*http.Response, error) {
 	return resp, nil
 }
 
-func getAddressParts(osmNodeDetails *nodeDetails) (addressParts, error) {
+func getAddressParts(osmNodeDetails *NodeDetails) (AddressParts, error) {
 	parts := utils.SplitStringByComma(osmNodeDetails.DisplayName)
 
 	// Accounts for places without postcode
@@ -89,12 +88,12 @@ func getAddressParts(osmNodeDetails *nodeDetails) (addressParts, error) {
 	// Exits early if there are too few parts in the display name
 	length := len(parts)
 	if length < (5 - indexModifier) {
-		return addressParts{}, errors.New("not enough address parts in display_name")
+		return AddressParts{}, errors.New("not enough address parts in display_name")
 	}
 
 	// Algoritm to assign strings to keys. Typical format of diplay_name:
 	// "Mad Goat Tap House, Teaterplassen, Grønland, Gamle Oslo, Oslo, 0188, Norge"
-	modAddress := addressParts{
+	modAddress := AddressParts{
 		Sted:     parts[length-(5-indexModifier)],
 		Kommune:  parts[length-(4-indexModifier)],
 		Fylke:    parts[length-(3-indexModifier)],
@@ -103,13 +102,13 @@ func getAddressParts(osmNodeDetails *nodeDetails) (addressParts, error) {
 
 	err := addressQualityControl(&modAddress, osmNodeDetails.Address)
 	if err != nil {
-		return addressParts{}, err
+		return AddressParts{}, err
 	}
 
 	return modAddress, nil
 }
 
-func addressQualityControl(modAddress *addressParts, controlAddress address) error {
+func addressQualityControl(modAddress *AddressParts, controlAddress address) error {
 	if modAddress.Postcode != controlAddress.Postcode {
 		return fmt.Errorf("postkode matcher ikke, registert postkode er %s og postkoden vi fikk er %s", controlAddress.Postcode, modAddress.Postcode)
 	}

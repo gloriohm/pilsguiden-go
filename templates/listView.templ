@@ -2,7 +2,7 @@ package templates
 
 import "go-router/models"
 
-templ ListView(url models.UrlNav, locs []models.BaseLocation, bars []models.BarView) {
+templ ListView(url models.UrlNav, locs []bars.BaseLocation, bars []models.BarView) {
     <section>
         @navTree(url)
         @locationLinks(locs)

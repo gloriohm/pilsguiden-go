@@ -10,31 +10,31 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func CreateBar(ctx context.Context, conn *pgxpool.Pool, input BarManual) error {
+func CreateBar(ctx context.Context, conn *pgxpool.Pool, input BarManual) (int, error) {
 	bar := Bar{BarManual: input}
 	slug := utils.ToURL(bar.Name)
 	bar.Slug = slug
 
 	node, locData, err := osm.GetBarLocationData(input.OsmID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	addrID, err := upsertLocations(ctx, conn, locData)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	bar.BarLocation = addrID
 
 	err = brreg.CreateOrgIfNotExist(ctx, conn, bar.OrgNummer)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	id, err := createBarRow(ctx, conn, bar)
 	if err != nil {
-		return fmt.Errorf("error adding bar to Supabase: %w", err)
+		return 0, fmt.Errorf("error adding bar to Supabase: %w", err)
 	}
 
 	if bar.LinkedBar {
@@ -42,7 +42,7 @@ func CreateBar(ctx context.Context, conn *pgxpool.Pool, input BarManual) error {
 		createBarMetadata(ctx, conn, extraDetails)
 	}
 
-	return nil
+	return id, nil
 }
 
 func upsertLocations(ctx context.Context, conn *pgxpool.Pool, adr osm.AddressParts) (BarLocation, error) {

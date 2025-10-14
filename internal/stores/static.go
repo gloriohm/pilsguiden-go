@@ -2,23 +2,24 @@ package stores
 
 import (
 	"errors"
+	"go-router/internal/bars"
 	"go-router/models"
 	"sync"
 	"time"
 )
 
 type Fylker struct {
-	Data        []models.Location
+	Data        []bars.Location
 	LastUpdated time.Time
 }
 
 type Kommuner struct {
-	Data        []models.Location
+	Data        []bars.Location
 	LastUpdated time.Time
 }
 
 type Steder struct {
-	Data        []models.Location
+	Data        []bars.Location
 	LastUpdated time.Time
 }
 
@@ -37,7 +38,7 @@ type StaticStore struct {
 
 var AppStore = &StaticStore{}
 
-func (s *StaticStore) UpdateFylker(data []models.Location) {
+func (s *StaticStore) UpdateFylker(data []bars.Location) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.Fylker = Fylker{
@@ -46,7 +47,7 @@ func (s *StaticStore) UpdateFylker(data []models.Location) {
 	}
 }
 
-func (s *StaticStore) UpdateKommuner(data []models.Location) {
+func (s *StaticStore) UpdateKommuner(data []bars.Location) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.Kommuner = Kommuner{
@@ -55,7 +56,7 @@ func (s *StaticStore) UpdateKommuner(data []models.Location) {
 	}
 }
 
-func (s *StaticStore) UpdateSteder(data []models.Location) {
+func (s *StaticStore) UpdateSteder(data []bars.Location) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.Steder = Steder{
@@ -73,7 +74,7 @@ func (s *StaticStore) UpdateBreweries(data []models.Brewery) {
 	}
 }
 
-func (s *StaticStore) GetFylkerData() []models.Location {
+func (s *StaticStore) GetFylkerData() []bars.Location {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.Fylker.Data
@@ -90,7 +91,7 @@ func (s *StaticStore) GetFylkeBySlug(slug string) int {
 	return 0
 }
 
-func (s *StaticStore) GetKommunerData() []models.Location {
+func (s *StaticStore) GetKommunerData() []bars.Location {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.Kommuner.Data
@@ -107,7 +108,7 @@ func (s *StaticStore) GetKommuneBySlug(slug string) int {
 	return 0
 }
 
-func (s *StaticStore) GetStederData() []models.Location {
+func (s *StaticStore) GetStederData() []bars.Location {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.Steder.Data
@@ -130,11 +131,11 @@ func (s *StaticStore) GetBreweriesData() []models.Brewery {
 	return s.Breweries.Data
 }
 
-func (s *StaticStore) GetLocationBySlug(slug, level string) (models.BaseLocation, error) {
+func (s *StaticStore) GetLocationBySlug(slug, level string) (bars.BaseLocation, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	var src []models.Location
+	var src []bars.Location
 	switch level {
 	case "fylke":
 		src = s.Fylker.Data
@@ -143,23 +144,23 @@ func (s *StaticStore) GetLocationBySlug(slug, level string) (models.BaseLocation
 	case "sted":
 		src = s.Steder.Data
 	default:
-		return models.BaseLocation{}, errors.New("level not fylke, kommune, or sted")
+		return bars.BaseLocation{}, errors.New("level not fylke, kommune, or sted")
 	}
 
 	for _, loc := range src {
 		if loc.Slug == slug {
-			return models.BaseLocation{ID: loc.ID, Name: loc.Name, Slug: loc.Slug}, nil
+			return bars.BaseLocation{ID: loc.ID, Name: loc.Name, Slug: loc.Slug}, nil
 		}
 	}
 
-	return models.BaseLocation{}, errors.New("location not found by slug")
+	return bars.BaseLocation{}, errors.New("location not found by slug")
 }
 
-func (s *StaticStore) GetLocationsByParent(ID int, level string) []models.Location {
+func (s *StaticStore) GetLocationsByParent(ID int, level string) []bars.Location {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	var src []models.Location
+	var src []bars.Location
 	switch level {
 	case "kommune":
 		src = s.Kommuner.Data
@@ -169,7 +170,7 @@ func (s *StaticStore) GetLocationsByParent(ID int, level string) []models.Locati
 		return nil
 	}
 
-	var matches []models.Location
+	var matches []bars.Location
 	for _, loc := range src {
 		if *loc.Parent == ID {
 			matches = append(matches, loc)

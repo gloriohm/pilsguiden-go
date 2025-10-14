@@ -1,8 +1,8 @@
 package database
 
 import (
+	"go-router/internal/bars"
 	"go-router/internal/stores"
-	"go-router/models"
 	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -28,7 +28,7 @@ func InitStaticData(conn *pgxpool.Pool) {
 	log.Println("✅ All static stores set")
 }
 
-func splitLocations(in []models.Location) (A, B, C []models.Location) {
+func splitLocations(in []bars.Location) (A, B, C []bars.Location) {
 	for _, loc := range in {
 		switch loc.Hierarchy {
 		case "fylke":

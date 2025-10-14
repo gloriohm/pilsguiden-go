@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"go-router/database"
 	"go-router/internal/auth"
+	"go-router/internal/bars"
 	"go-router/internal/handlers"
 	"go-router/internal/stores"
-	"go-router/internal/utils"
 	"go-router/models"
 	"go-router/templates"
 	"log"
@@ -58,7 +58,7 @@ func (a *app) handleHome(w http.ResponseWriter, r *http.Request) {
 	})
 
 	fylker := stores.AppStore.GetFylkerData()
-	baseFylke := utils.ToBase(fylker)
+	baseFylke := bars.ToBase(fylker)
 
 	if err := eg.Wait(); err != nil {
 		log.Printf("home: data load error: %v", err)

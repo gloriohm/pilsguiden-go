@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"go-router/models"
 	"regexp"
 	"strings"
 	"unicode"
@@ -49,23 +48,10 @@ func ToURL(input string) string {
 	return result
 }
 
-func CheckValidLocationLevel(level string) bool {
-	switch level {
-	case "fylke":
-		return true
-	case "kommune":
-		return true
-	case "sted":
-		return true
-	default:
-		return false
+func SplitStringByComma(data string) []string {
+	parts := strings.Split(data, ",")
+	for i := range parts {
+		parts[i] = strings.TrimSpace(parts[i])
 	}
-}
-
-func ToBase(in []models.Location) []models.BaseLocation {
-	out := make([]models.BaseLocation, len(in))
-	for i := range in {
-		out[i] = in[i].BaseLocation
-	}
-	return out
+	return parts
 }

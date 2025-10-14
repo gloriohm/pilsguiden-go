@@ -103,3 +103,29 @@ func UpdatePrice(ctx context.Context, conn *pgxpool.Pool, p Price) error {
 
 	return nil
 }
+
+func UpdatePriceHistory(ctx context.Context, conn *pgxpool.Pool, id int) error {
+	q := `
+		INSERT INTO price_history (price_id, bar_id, price, pint, size, valid_from, valid_to)
+		SELECT
+			p.id AS price_id,
+			p.bar_id AS bar_id,
+			p.price AS price,
+			p.pint AS pint,
+			p.size AS size,
+			p.price_updated AS valid_from,
+			NOW() AS valid_to
+		FROM prices p;
+	`
+
+	tag, err := conn.Exec(ctx, q)
+	if err != nil {
+		return fmt.Errorf("migrating price to history failed: %w", err)
+	}
+
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("no rows updated for id %d", id)
+	}
+
+	return nil
+}

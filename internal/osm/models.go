@@ -1,6 +1,6 @@
 package osm
 
-type nodeDetails struct {
+type NodeDetails struct {
 	Lat         string    `json:"lat"`
 	Lon         string    `json:"lon"`
 	DisplayName string    `json:"display_name"`
@@ -9,7 +9,7 @@ type nodeDetails struct {
 	Type        string    `json:"type"`
 }
 
-type addressParts struct {
+type AddressParts struct {
 	Sted     string
 	Kommune  string
 	Fylke    string

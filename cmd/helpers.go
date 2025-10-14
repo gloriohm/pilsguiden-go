@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"go-router/internal/bars"
 	"go-router/internal/stores"
 	"go-router/models"
 	"go-router/templates"
@@ -54,14 +55,14 @@ func setNavParams(fylke, kommune, sted string) (models.UrlNav, models.CurrentLvl
 	return nav, current, nil
 }
 
-func extractNextLocs(bars []models.BarView, lvl string) []models.BaseLocation {
-	seen := make(map[int]models.BaseLocation)
+func extractNextLocs(bars []models.BarView, lvl string) []bars.BaseLocation {
+	seen := make(map[int]bars.BaseLocation)
 
 	switch lvl {
 	case "fylke":
 		for _, bar := range bars {
 			if _, exists := seen[bar.Kommune]; !exists {
-				seen[bar.Kommune] = models.BaseLocation{
+				seen[bar.Kommune] = bars.BaseLocation{
 					Slug: bar.KommuneSlug,
 					Name: bar.KommuneName,
 				}
@@ -75,7 +76,7 @@ func extractNextLocs(bars []models.BarView, lvl string) []models.BaseLocation {
 			}
 			id := *bar.Sted
 			if _, exists := seen[id]; !exists {
-				seen[id] = models.BaseLocation{
+				seen[id] = bars.BaseLocation{
 					Slug: *bar.StedSlug,
 					Name: *bar.StedName,
 				}
@@ -83,10 +84,10 @@ func extractNextLocs(bars []models.BarView, lvl string) []models.BaseLocation {
 		}
 
 	default:
-		return []models.BaseLocation{}
+		return []bars.BaseLocation{}
 	}
 
-	locs := make([]models.BaseLocation, 0, len(seen))
+	locs := make([]bars.BaseLocation, 0, len(seen))
 	for _, loc := range seen {
 		locs = append(locs, loc)
 	}

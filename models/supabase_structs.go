@@ -53,21 +53,6 @@ type BarExpandedLocation struct {
 	StedSlug    *string
 }
 
-type BarMetadata struct {
-	BarID        int       `db:"bar_id"`
-	LastOSMSync  time.Time `db:"last_osm_sync"`
-	LinkedBar    bool      `db:"linked_bar"`
-	Type         string    `db:"type"`
-	Cuisine      *string   `db:"cuisine"`
-	OpeningHours *string   `db:"opening_hours"`
-	Wheelchair   *string   `db:"wheelchair"`
-	Website      *string   `db:"website"`
-	Email        *string   `db:"email"`
-	Phone        *string   `db:"phone"`
-	Facebook     *string   `db:"facebook"`
-	Instagram    *string   `db:"instagram"`
-}
-
 type BarManual struct {
 	Name      string      `db:"bar" form:"name"`
 	Address   string      `db:"address" form:"address"`
@@ -102,18 +87,6 @@ type AboutInfo struct {
 	MaxPrice int
 	MinPrice int
 	Diff     int
-}
-
-type BaseLocation struct {
-	ID   int    `db:"id"`
-	Name string `db:"name"`
-	Slug string `db:"slug"`
-}
-
-type Location struct {
-	BaseLocation
-	Hierarchy string `db:"hierarchy"`
-	Parent    *int   `db:"parent"`
 }
 
 type Brewery struct {
@@ -175,25 +148,4 @@ type BarUpdateForm struct {
 	OrgNummer   string  `db:"orgnummer" form:"orgnummer"`
 	Slug        string  `db:"slug" form:"slug"`
 	IsActive    bool    `db:"is_active" form:"active"`
-}
-
-type Price struct {
-	ID           int       `db:"id"`
-	BarID        int       `db:"bar_id"`
-	Price        int       `db:"price" form:"price"`
-	Pint         int       `db:"pint"`
-	Size         float32   `db:"size" form:"size"`
-	PriceUpdated time.Time `db:"price_updated"`
-	PriceChecked time.Time `db:"price_checked"`
-	DefaultPrice bool      `db:"default_price"`
-}
-
-type PriceTime struct {
-	ID             int         `db:"id"`
-	PriceID        int         `db:"price_id"`
-	FromTime       time.Time   `db:"from_time"`
-	UntilTime      time.Time   `db:"until_time"`
-	Day            int         `db:"day"`
-	PassesMidnight bool        `db:"passes_midnight"`
-	EndDay         pgtype.Int8 `db:"end_day"` // null when passes_midnight is false
 }
