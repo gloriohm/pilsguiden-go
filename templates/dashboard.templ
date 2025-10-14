@@ -7,7 +7,7 @@ import (
     "go-router/models"
     )
 
-templ Dashboard(pendingPrices []models.UpdatedPrice) {
+templ Dashboard(pendingPrices []models.Price) {
     <main>
 		<h2 class="text-lg font-semibold mb-3">Priser til godkjenning</h2>
 		<div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
@@ -27,7 +27,7 @@ templ Dashboard(pendingPrices []models.UpdatedPrice) {
 							<td class="px-4 py-2 text-right text-sm">{p.Price}</td>
 							<td class="px-4 py-2 text-right text-sm">{fmt.Sprintf("%.1f", p.Size)}</td>
 							<td class="px-4 py-2 text-right text-sm">{p.Pint}</td>
-							<td class="px-4 py-2 text-sm">{p.PriceReported.Format("2006-01-02 15:04")}</td>
+							<td class="px-4 py-2 text-sm">{p.PriceUpdated.Format("2006-01-02 15:04")}</td>
                             <td class="px-4 py-2 text-sm">
                                 <button class={btnPrimary}>Godkjenn</button>
                             </td>
