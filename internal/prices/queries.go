@@ -73,7 +73,7 @@ func UpdatePriceChecked(ctx context.Context, conn *pgxpool.Pool, newTime time.Ti
 	return nil
 }
 
-func UpdatePrice(ctx context.Context, conn *pgxpool.Pool, p Price) error {
+func updatePriceRow(ctx context.Context, conn *pgxpool.Pool, p Price) error {
 	query := `
         UPDATE prices
         SET
@@ -104,7 +104,7 @@ func UpdatePrice(ctx context.Context, conn *pgxpool.Pool, p Price) error {
 	return nil
 }
 
-func UpdatePriceHistory(ctx context.Context, conn *pgxpool.Pool, id int) error {
+func updatePriceHistory(ctx context.Context, conn *pgxpool.Pool, id int) error {
 	q := `
 		INSERT INTO price_history (price_id, bar_id, price, pint, size, valid_from, valid_to)
 		SELECT

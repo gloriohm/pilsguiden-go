@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"go-router/database"
 	"go-router/internal/auth"
-	"go-router/internal/bars"
 	"go-router/internal/handlers"
 	"go-router/internal/stores"
 	"go-router/models"
@@ -19,58 +18,9 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi"
 	"github.com/go-playground/form"
-	"golang.org/x/sync/errgroup"
 )
 
-func (a *app) handleHome(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
-	sessionData := handlers.GetSessionData(ctx)
-
-	var (
-		totalBars int
-		topTen    []models.BarView
-		bottomTen []models.BarView
-		eg        errgroup.Group
-	)
-
-	eg.Go(func() error {
-		n, err := database.GetTotalBars(ctx, a.Pool)
-		if err == nil {
-			totalBars = n
-		}
-		return err
-	})
-	eg.Go(func() error {
-		t, err := database.GetTopTen(ctx, a.Pool)
-		if err == nil {
-			topTen = t
-		}
-		return err
-	})
-	eg.Go(func() error {
-		b, err := database.GetBottomTen(ctx, a.Pool)
-		if err == nil {
-			bottomTen = b
-		}
-		return err
-	})
-
-	fylker := stores.AppStore.GetFylkerData()
-	baseFylke := bars.ToBase(fylker)
-
-	if err := eg.Wait(); err != nil {
-		log.Printf("home: data load error: %v", err)
-		http.Error(w, "Feil under lasting av data", http.StatusInternalServerError)
-		return
-	}
-
-	c := templates.Layout("Pilsguiden", sessionData.Consented, templates.Home(totalBars, baseFylke, topTen, bottomTen))
-	templ.Handler(c).ServeHTTP(w, r)
-}
-
-func (a *app) handleAbout(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleAbout(w http.ResponseWriter, r *http.Request) {
 	sessionData := handlers.GetSessionData(r.Context())
 	data, err := database.GetAboutPageData(a.Pool)
 	if err != nil {
@@ -80,7 +30,7 @@ func (a *app) handleAbout(w http.ResponseWriter, r *http.Request) {
 	templates.Layout("Om Pilsguiden", sessionData.Consented, templates.About(data)).Render(r.Context(), w)
 }
 
-func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleBar(w http.ResponseWriter, r *http.Request) {
 	sessionData := handlers.GetSessionData(r.Context())
 	barParam := chi.URLParam(r, "slug")
 	bar, err := database.GetBarBySlug(a.Pool, barParam)
@@ -115,7 +65,7 @@ func (a *app) handleBar(w http.ResponseWriter, r *http.Request) {
 	templates.Layout(bar.Name, sessionData.Consented, templates.BarPage(bar, hkeys, extra, &user)).Render(r.Context(), w)
 }
 
-func (a *app) handleList(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleList(w http.ResponseWriter, r *http.Request) {
 	sessionData := handlers.GetSessionData(r.Context())
 	sessID := sessionData.SessionID
 	consented := sessionData.Consented
@@ -151,7 +101,7 @@ func (a *app) handleList(w http.ResponseWriter, r *http.Request) {
 	templates.Layout("List", consented, templates.ListView(nav, nextLocations, bars)).Render(r.Context(), w)
 }
 
-func (a *app) handleFilterUpdate(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleFilterUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 	sessionData := handlers.GetSessionData(r.Context())
@@ -165,7 +115,7 @@ func (a *app) handleFilterUpdate(w http.ResponseWriter, r *http.Request) {
 	templ.Handler(templates.List(bars)).ServeHTTP(w, r)
 }
 
-func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleCustomTime(w http.ResponseWriter, r *http.Request) {
 	sessionData := handlers.GetSessionData(r.Context())
 	sessID := sessionData.SessionID
 	if err := r.ParseForm(); err != nil {
@@ -202,7 +152,7 @@ func (a *app) handleCustomTime(w http.ResponseWriter, r *http.Request) {
 	templ.Handler(templates.List(bars)).ServeHTTP(w, r)
 }
 
-func (a *app) handleSearch(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleSearch(w http.ResponseWriter, r *http.Request) {
 	searchTerm := r.URL.Query().Get("search")
 	decoded, _ := url.QueryUnescape(searchTerm)
 	if len(decoded) > 2 {
@@ -217,7 +167,7 @@ func (a *app) handleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *app) handleUpdateBarForm(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleUpdateBarForm(w http.ResponseWriter, r *http.Request) {
 	barParam := chi.URLParam(r, "id")
 	barID, err := strconv.Atoi(barParam)
 	if err != nil {
@@ -257,7 +207,7 @@ func (a *app) handleUpdateBarForm(w http.ResponseWriter, r *http.Request) {
 	templates.Layout("Oppdater bar", true, templates.UpdateBarForm(bar, hkeys, brews)).Render(r.Context(), w)
 }
 
-func (a *app) handleUpdateBar(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleUpdateBar(w http.ResponseWriter, r *http.Request) {
 	v := r.Context().Value(auth.UserIDKey)
 	user, ok := v.(string)
 	if !ok {

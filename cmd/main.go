@@ -8,17 +8,11 @@ import (
 	"os"
 	"time"
 
-	"go-router/database"
+	"go-router/internal/platform/database"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/patrickmn/go-cache"
 )
-
-type app struct {
-	Pool *pgxpool.Pool
-}
 
 var sessionStore = cache.New(30*time.Minute, 10*time.Minute)
 
@@ -37,11 +31,13 @@ func main() {
 		os.Getenv("DB_NAME"),
 	)
 	ctx := context.Background()
-	pool, err := NewDBPool(ctx, dsn)
+	pool, err := database.NewPool(ctx, dsn)
 
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	appRepo := app.NewAppRepo(pool)
 
 	app := &app{Pool: pool}
 	database.InitStaticData(app.Pool)
@@ -53,31 +49,4 @@ func main() {
 
 	log.Println("Listening on :3000")
 	srv.ListenAndServe()
-}
-
-func NewDBPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
-	cfg, err := pgxpool.ParseConfig(dsn)
-	if err != nil {
-		return nil, err
-	}
-
-	cfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
-
-	cfg.MinConns = 1
-	cfg.MaxConns = 10
-	cfg.MaxConnIdleTime = 5 * time.Minute
-	cfg.MaxConnLifetime = 30 * time.Minute
-
-	pool, err := pgxpool.NewWithConfig(ctx, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-	if err := pool.Ping(ctx); err != nil {
-		pool.Close()
-		return nil, err
-	}
-	return pool, nil
 }

@@ -3,39 +3,16 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"go-router/database"
 	"go-router/internal/stores"
-	"go-router/models"
 	"go-router/templates"
 	"log"
 	"net/http"
 
 	"github.com/a-h/templ"
-	"github.com/go-playground/form"
 )
 
-func (a *app) handleCreateBar(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "bad form", http.StatusBadRequest)
-		return
-	}
-
-	decoder := form.NewDecoder()
-	var userInput models.BarManual
-	decoder.Decode(&userInput, r.PostForm)
-	fmt.Println(r.PostForm)
-
-	err := database.CreateBar(a.Pool, &userInput)
-	if err != nil {
-		msg := fmt.Sprintf("Noe gikk galt: %s", err)
-		templ.Handler(templates.Toast(msg)).ServeHTTP(w, r)
-	} else {
-		templ.Handler(templates.Toast("Bar opprettet!")).ServeHTTP(w, r)
-	}
-}
-
-func (a *app) handleCreateBrewery(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleCreateBrewery(w http.ResponseWriter, r *http.Request) {
 	newBrew := r.FormValue("new_brew")
 
 	if newBrew == "" {
@@ -66,13 +43,13 @@ func (a *app) handleCreateBrewery(w http.ResponseWriter, r *http.Request) {
 	templ.Handler(templates.Toast("Bryggeri opprettet!")).ServeHTTP(w, r)
 }
 
-func (a *app) handleFetchBars(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleFetchBars(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
 }
 
-func (app *app) APIKeyMiddleware(next http.Handler) http.Handler {
+func (app *appl) APIKeyMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiKey := r.Header.Get("X-API-Key")
 		if apiKey == "" {

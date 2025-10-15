@@ -50,7 +50,7 @@ func handleBreweryPicker(w http.ResponseWriter, r *http.Request) {
 	templ.Handler(templates.BreweryPicker(barID, brews)).ServeHTTP(w, r)
 }
 
-func (a *app) handleUpdateBrewery(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleUpdateBrewery(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "invalid value", http.StatusBadRequest)
 		return
@@ -90,7 +90,7 @@ func handlePriceUpdater(w http.ResponseWriter, r *http.Request) {
 	templ.Handler(templates.PriceUpdater(id, size)).ServeHTTP(w, r)
 }
 
-func (a *app) handleConfirmPrice(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleConfirmPrice(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "invalid value", http.StatusBadRequest)
 		return
@@ -117,7 +117,7 @@ func (a *app) handleConfirmPrice(w http.ResponseWriter, r *http.Request) {
 	templ.Handler(templates.UpdateInterface("Pris bekreftet! \nTakk for at du bidrar 🍻", timeString, targetElementID)).ServeHTTP(w, r)
 }
 
-func (a *app) handleUpdatePrice(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleUpdatePrice(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "invalid value", http.StatusBadRequest)
 		return

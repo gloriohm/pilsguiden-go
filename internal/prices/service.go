@@ -20,6 +20,15 @@ func CreateNewPriceControl(ctx context.Context, conn *pgxpool.Pool, input PriceC
 	return err
 }
 
+func UpdatePrice(ctx context.Context, conn *pgxpool.Pool, input Price) error {
+	priceAutoFormat(&input)
+	if err := updatePriceHistory(ctx, conn, input.ID); err != nil {
+		return err
+	}
+	err := updatePriceRow(ctx, conn, input)
+	return err
+}
+
 func priceAutoFormat(p *Price) {
 	if p.Size != 0.5 {
 		p.Pint = ToPint(p.Price, p.Size)

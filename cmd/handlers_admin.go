@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (a *app) handleAdminDashboard(w http.ResponseWriter, r *http.Request) {
+func (a *appl) handleAdminDashboard(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	pendingPrices, err := database.GetPendingPrices(ctx, a.Pool)
 	if err != nil {

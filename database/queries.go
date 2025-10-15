@@ -505,34 +505,6 @@ func GetBarByID(conn *pgxpool.Pool, id int) (models.Bar, error) {
 	return bar, nil
 }
 
-func UpdateHistoricPrice(conn *pgxpool.Pool, p models.Price) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	query := `
-		INSERT INTO price_history
-			(bar_id, price, size, pint, valid_from)
-		VALUES
-			($1, $2, $3, $4, $5);
-	`
-
-	cmdTag, err := conn.Exec(ctx, query,
-		p.BarID,
-		p.Price,
-		p.Size,
-		p.Pint,
-		p.PriceUpdated)
-
-	if err != nil {
-		return fmt.Errorf("update failed: %w", err)
-	}
-
-	if cmdTag.RowsAffected() == 0 {
-		return fmt.Errorf("no rows updated")
-	}
-
-	return nil
-}
-
 func UpdateBarData(conn *pgxpool.Pool, p models.BarUpdateForm) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

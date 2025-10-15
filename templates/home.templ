@@ -1,22 +1,22 @@
 package templates
 
-import "go-router/models"
+import "go-router/internal/app"
 
-templ Home(total int, fylker []bars.BaseLocation, topList, bottomList []models.BarView) {
+templ Home(total int, data app.HomeData) {
     <section>
         <article>
             <h2 class="text-2xl my-2 font-bold">Velkommen til Pilsguiden!</h2>
             <p class="prose text-left">
-                Vi har samlet ølprisene fra <span class="font-bold">{total}</span> serveringssteder over hele landet.
+                Vi har samlet ølprisene fra <span class="font-bold">{data.TotalBars}</span> serveringssteder over hele landet.
                 Finn fram til fylket, kommunen eller bydelen din og sjekk hvor mye pilsen koster.
                 Noen barer har tidsbestemte priser ⏰ og listen oppdateres i sanntid.
             </p>
         </article>
         <h3 class="font-semibold py-2">Velg sted:</h3>
-        @locationLinks(fylker)
+        @locationLinks(data.Fylker)
         <h3 class="text-xl my-2 font-bold">Norges billigste øl</h3>
-        @List(topList)
+        @List(data.TopTenBars)
         <h3 class="text-xl my-2 font-bold">Norges dyreste øl</h3>
-        @List(bottomList)
+        @List(data.BottomTenBars)
     </section>
 }
